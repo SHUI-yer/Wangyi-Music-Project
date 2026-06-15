@@ -1,21 +1,32 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { getBanners, getRecommended, getRandomSongs, getSongsByCategory } from '../api/music'
 import { Play, PlayCircle, RefreshCw, ChevronRight, Music, Heart } from 'lucide-vue-next'
 import { usePlayerStore } from '../stores/player'
+import { PLAYLIST_CONFIG } from '../config/playlistConfig'
 
 const banners = ref([])
 const playlists = ref([])
 const guessLikeSongs = ref([])
 const categorySongs = ref({
-  rock: [],
+  chinese: [],
   pop: [],
-  jazz: [],
-  chinese: []
+  rock: [],
+  jazz: []
 })
 const currentBanner = ref(0)
 const player = usePlayerStore()
 let timer = null
+
+// 从配置文件中反向查找类别名称和对应的路由 ID
+const getCategoryInfo = (catKey) => {
+  for (const [id, config] of Object.entries(PLAYLIST_CONFIG)) {
+    if (config.category === catKey) {
+      return { id: parseInt(id), name: config.name }
+    }
+  }
+  return { id: 0, name: catKey }
+}
 
 const refreshGuessLike = async () => {
   const res = await getRandomSongs(6)
@@ -151,11 +162,11 @@ onUnmounted(() => {
           <div class="flex items-center gap-2">
             <div class="w-1 h-4 bg-netease-red rounded-full"></div>
             <h3 class="text-lg font-bold capitalize">
-              {{ cat === 'chinese' ? '华语经典' : cat === 'rock' ? '摇滚狂热' : cat === 'pop' ? '流行前线' : '爵士心情' }}
+              {{ getCategoryInfo(cat).name }}
             </h3>
           </div>
           <button 
-            @click="$router.push(`/playlist/${cat === 'rock' ? 203 : cat === 'pop' ? 202 : cat === 'jazz' ? 204 : 201}`)"
+            @click="$router.push(`/playlist/${getCategoryInfo(cat).id}`)"
             class="text-xs text-gray-400 hover:text-netease-red flex items-center gap-1"
           >
             更多 <ChevronRight class="w-3 h-3" />

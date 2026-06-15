@@ -17,11 +17,11 @@ export const getBanners = async () => {
 
 export const getRecommended = async () => {
   return mockResponse([
-    { id: 101, name: 'Exclusive Mix Vol. 1', cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+1&image_size=square', playCount: 1250000 },
-    { id: 102, name: 'Daily Discovery', cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+2&image_size=square', playCount: 850000 },
-    { id: 103, name: 'Top 50 Global', cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+3&image_size=square', playCount: 2350000 },
-    { id: 104, name: 'Chill Vibes', cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+4&image_size=square', playCount: 750000 },
-    { id: 105, name: 'Rock Classics', cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+5&image_size=square', playCount: 1550000 },
+    { id: 101, name: getFallbackPlaylistConfig(101).name, cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+1&image_size=square', playCount: 1250000 },
+    { id: 102, name: getFallbackPlaylistConfig(102).name, cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+2&image_size=square', playCount: 850000 },
+    { id: 103, name: getFallbackPlaylistConfig(103).name, cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+3&image_size=square', playCount: 2350000 },
+    { id: 104, name: getFallbackPlaylistConfig(104).name, cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+4&image_size=square', playCount: 750000 },
+    { id: 105, name: getFallbackPlaylistConfig(105).name, cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+5&image_size=square', playCount: 1550000 },
   ])
 }
 
