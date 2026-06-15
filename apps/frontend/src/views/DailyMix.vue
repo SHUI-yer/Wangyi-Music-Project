@@ -112,7 +112,7 @@ const formatDate = (date) => {
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div v-for="(track, index) in tracks" :key="track.id" 
              @click="player.setTrack(track, tracks)"
-             class="group relative flex items-center p-4 rounded-2xl bg-white border border-gray-100 hover:border-netease-red/30 hover:shadow-xl hover:shadow-netease-red/5 transition-all cursor-pointer overflow-hidden">
+             class="group relative flex items-center p-4 rounded-2xl bg-netease-bg border border-netease-border hover:border-netease-red/30 hover:shadow-xl hover:shadow-netease-red/5 transition-all cursor-pointer overflow-hidden">
           
           <!-- Hover Background Decor -->
           <div class="absolute right-0 top-0 w-24 h-24 bg-netease-red/5 rounded-full translate-x-12 -translate-y-12 opacity-0 group-hover:opacity-100 transition-opacity"></div>

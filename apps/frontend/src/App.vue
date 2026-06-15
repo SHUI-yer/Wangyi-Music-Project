@@ -51,7 +51,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-screen w-full bg-white overflow-hidden text-netease-text">
+  <div class="flex flex-col h-screen w-full bg-netease-bg overflow-hidden text-netease-text">
     <!-- Header -->
     <header class="h-14 bg-netease-red flex items-center justify-between px-4 shrink-0 z-50 shadow-md">
       <div class="flex items-center space-x-12">
@@ -87,7 +87,7 @@ onUnmounted(() => {
 
     <div class="flex flex-1 overflow-hidden">
       <!-- Sidebar -->
-      <aside class="w-52 bg-netease-sidebar border-r border-netease-border flex flex-col overflow-y-auto shrink-0">
+      <aside class="w-52 bg-netease-sidebar border-r border-netease-border flex flex-col overflow-y-auto shrink-0 backdrop-blur-md bg-opacity-95">
         <nav class="p-3 space-y-1">
           <div class="sidebar-title">推荐</div>
           <router-link to="/" class="sidebar-item" :class="{ 'active-menu': activePath === '/' }">
@@ -126,7 +126,7 @@ onUnmounted(() => {
       </aside>
 
       <!-- Main Content Area -->
-      <main class="flex-1 bg-white overflow-y-auto custom-scrollbar relative">
+      <main class="flex-1 bg-netease-bg overflow-y-auto custom-scrollbar relative">
         <div class="p-8 max-w-6xl mx-auto pb-24">
           <router-view v-slot="{ Component }">
             <transition name="page" mode="out-in">
@@ -138,7 +138,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Bottom Player Bar (Industrial Refactored) -->
-    <footer class="h-16 bg-white border-t border-netease-border flex items-center px-4 shrink-0 z-50 shadow-[0_-1px_10px_rgba(0,0,0,0.05)]">
+    <footer class="h-16 bg-netease-bg/80 border-t border-netease-border flex items-center px-4 shrink-0 z-50 backdrop-blur-xl shadow-[0_-1px_10px_rgba(0,0,0,0.05)]">
       <SongInfo />
       <div class="flex-1 flex flex-col items-center justify-center max-w-2xl px-8">
         <Controls />

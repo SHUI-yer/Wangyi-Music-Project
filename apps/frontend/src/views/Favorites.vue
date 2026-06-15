@@ -11,7 +11,7 @@ const favoriteSongs = [
 </script>
 
 <template>
-  <div class="space-y-8 bg-white">
+  <div class="space-y-8 bg-netease-bg">
     <!-- Header (Classic Like Playlist) -->
     <header class="flex flex-col md:flex-row items-start space-y-6 md:space-y-0 md:space-x-8 px-4">
       <div class="w-52 h-52 rounded border border-netease-border overflow-hidden flex-shrink-0 p-1 bg-white shadow-sm flex items-center justify-center">

@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿<script setup>
+﻿﻿<script setup>
 import { ref, onMounted } from 'vue'
 import { Music, FolderSearch, Plus, Play, Trash2 } from 'lucide-vue-next'
 import { usePlayerStore } from '../stores/player'
@@ -81,7 +81,7 @@ const playLocal = (track) => {
 <template>
   <div class="space-y-8 pb-12">
     <!-- Header -->
-    <header class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+    <header class="bg-netease-bg p-8 rounded-2xl shadow-sm border border-netease-border flex items-center justify-between">
       <div class="flex items-center space-x-6">
         <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-50 shadow-inner">
           <img src="https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=cool+user+avatar+minimalist&image_size=square" class="w-full h-full object-cover">
@@ -123,7 +123,7 @@ const playLocal = (track) => {
     </header>
 
     <!-- Local Tracks List -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-netease-bg rounded-2xl shadow-sm border border-netease-border overflow-hidden">
       <div class="p-6 border-b border-gray-50 flex items-center justify-between">
         <h3 class="font-bold text-gray-800 flex items-center gap-2">
           歌曲列表 ({{ localServerTracks.length }})

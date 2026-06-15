@@ -9,7 +9,7 @@ const playRecent = (track) => {
 </script>
 
 <template>
-  <div class="fixed bottom-[72px] right-4 w-80 bg-white shadow-2xl rounded-lg overflow-hidden border border-gray-100 z-50">
+  <div class="fixed bottom-[72px] right-4 w-80 bg-netease-bg shadow-2xl rounded-lg overflow-hidden border border-netease-border z-50">
     <div class="p-4 border-b border-gray-100 bg-gray-50">
       <h3 class="font-bold text-gray-800 flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-netease-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
