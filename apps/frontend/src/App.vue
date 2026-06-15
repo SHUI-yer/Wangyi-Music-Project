@@ -9,8 +9,6 @@ import ProgressBar from './components/player/ProgressBar.vue'
 import VolumeControl from './components/player/VolumeControl.vue'
 import PlaylistDrawer from './components/player/PlaylistDrawer.vue'
 import FullscreenPlayer from './components/player/FullscreenPlayer.vue'
-
-const isDrawerOpen = ref(false)
 import { 
   Music2, 
   Search, 
@@ -23,6 +21,8 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-vue-next'
+
+const isDrawerOpen = ref(false)
 
 const route = useRoute()
 const router = useRouter()

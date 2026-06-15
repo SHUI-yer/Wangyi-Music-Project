@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Force Vite update */
 :root {
   color-scheme: light;
 }
