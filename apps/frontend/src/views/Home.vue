@@ -157,7 +157,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Mini Song List -->
-        <div class="bg-white rounded-xl border border-gray-50 overflow-hidden min-h-[280px]">
+        <div class="bg-netease-bg rounded-xl border border-netease-border overflow-hidden min-h-[280px]">
           <div v-if="!songs || songs.length === 0" class="h-[280px] flex flex-col items-center justify-center text-center p-8 space-y-2">
             <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-200">
               <Music class="w-6 h-6" />

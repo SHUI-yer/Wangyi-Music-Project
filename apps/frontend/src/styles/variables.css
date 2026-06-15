@@ -1,5 +1,17 @@
 :root {
   --primary-color: #C20C0C;
+  --bg-color: #F5F5F3;
+  --sidebar-bg: #EBEBE9;
+  --player-bg: rgba(245, 245, 243, 0.9);
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --border-color: #E1E1DE;
+  --hover-bg: #E2E2DF;
+}
+
+/* Dark mode fallback if needed */
+[data-theme='dark'] {
+  --primary-color: #C20C0C;
   --bg-color: #121212;
   --sidebar-bg: #1E1E1E;
   --player-bg: #212121;
@@ -7,15 +19,4 @@
   --text-secondary: #999999;
   --border-color: #333333;
   --hover-bg: #2C2C2C;
-}
-
-[data-theme='light'] {
-  --primary-color: #C20C0C;
-  --bg-color: #F5F5F5;
-  --sidebar-bg: #FFFFFF;
-  --player-bg: #FFFFFF;
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --border-color: #E0E0E0;
-  --hover-bg: #F0F0F0;
 }

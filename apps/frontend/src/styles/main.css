@@ -32,11 +32,11 @@ body {
 }
 
 .song-list-item:nth-child(even) {
-  @apply bg-[#F7F7F7];
+  @apply bg-[#F6F5F2];
 }
 
 .song-list-item:hover {
-  @apply bg-[#EBEDED];
+  @apply bg-[#EEEDEA];
 }
 
 /* Page Transition */
