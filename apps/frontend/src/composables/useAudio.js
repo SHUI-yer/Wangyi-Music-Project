@@ -54,7 +54,7 @@ const handleCanPlay = () => {
       console.log('Audio Can Play, attempting to start...')
       audio.play().catch((err) => {
         if (err.name === 'AbortError') {
-          console.log('Playback interrupted, will try again on next canplay')
+          console.log('Playback interrupted, will try again on next canplay')   
         } else {
           console.warn('Playback failed:', err)
           globalPlayer.isPlaying = false
@@ -62,6 +62,17 @@ const handleCanPlay = () => {
       })
     }
   }
+}
+
+// Attach listeners safely for HMR
+if (!audio.__hasListeners) {
+  audio.addEventListener('timeupdate', handleTimeUpdate)
+  audio.addEventListener('durationchange', handleDurationChange)
+  audio.addEventListener('ended', handleEnded)
+  audio.addEventListener('error', handleError)
+  audio.addEventListener('loadstart', handleLoadStart)
+  audio.addEventListener('canplay', handleCanPlay)
+  audio.__hasListeners = true
 }
 
 // NOTE: We REMOVED handlePlay/handlePause to prevent feedback loops with the watcher.
@@ -73,7 +84,7 @@ export function useAudio() {
   const play = () => {
     if (audio.src) {
       audio.play().catch((err) => {
-        console.warn('Playback failed (possibly autoplay policy):', err)
+        console.warn('Playback failed (possibly autoplay policy):', err)        
         player.isPlaying = false
       })
     }
@@ -92,64 +103,48 @@ export function useAudio() {
     audio.volume = Math.max(0, Math.min(1, v / 100))
   }
 
-  if (!isInitialized) {
-    // 1. Setup Global Listeners (Only once)
-    audio.addEventListener('timeupdate', handleTimeUpdate)
-    audio.addEventListener('durationchange', handleDurationChange)
-    audio.addEventListener('ended', handleEnded)
-    audio.addEventListener('error', handleError)
-    audio.addEventListener('loadstart', handleLoadStart)
-    audio.addEventListener('canplay', handleCanPlay)
-
-    // 2. Setup Global Watchers (Single Source of Truth: Store -> Audio)
-    watch(() => player.currentTrack, (newTrack) => {
-      if (newTrack?.url) {
-        const absoluteUrl = new URL(newTrack.url, window.location.origin).href
-        if (audio.src !== absoluteUrl) {
-          console.log('Audio Source Changing:', newTrack.name)
-          lastSrcSetTime = Date.now()
-          audio.src = newTrack.url
-          audio.load()
-          // Playback will be triggered by handleCanPlay if player.isPlaying is true
-        }
+  // Watchers MUST be re-created on component setup to survive HMR
+  watch(() => player.currentTrack, (newTrack) => {
+    if (newTrack?.url) {
+      const absoluteUrl = new URL(newTrack.url, window.location.origin).href  
+      if (audio.src !== absoluteUrl) {
+        console.log('Audio Source Changing:', newTrack.name)
+        lastSrcSetTime = Date.now()
+        audio.src = newTrack.url
+        audio.load()
       }
-    }, { immediate: true })
+    }
+  }, { immediate: true })
 
-    watch(() => player.playbackTrigger, () => {
-      // Only handle restart if the source is already correct and was not JUST set
-      // This prevents race conditions between currentTrack watcher and playbackTrigger watcher
-      const timeSinceSrcSet = Date.now() - lastSrcSetTime
-      if (player.currentTrack && player.isPlaying && timeSinceSrcSet > 100) {
-        console.log('Playback Triggered (Restart/Same Track)')
-        audio.currentTime = 0
+  watch(() => player.playbackTrigger, () => {
+    const timeSinceSrcSet = Date.now() - lastSrcSetTime
+    if (player.currentTrack && player.isPlaying && timeSinceSrcSet > 100) {   
+      console.log('Playback Triggered (Restart/Same Track)')
+      audio.currentTime = 0
+      audio.play().catch((err) => {
+        console.warn('Playback Trigger failed:', err)
+      })
+    }
+  })
+
+  watch(() => player.isPlaying, (playing) => {
+    if (playing) {
+      if (audio.paused) {
         audio.play().catch((err) => {
-          console.warn('Playback Trigger failed:', err)
+          console.warn('Manual Play failed:', err)
+          player.isPlaying = false
         })
       }
-    })
-
-    watch(() => player.isPlaying, (playing) => {
-      if (playing) {
-        if (audio.paused) {
-          audio.play().catch((err) => {
-            console.warn('Manual Play failed:', err)
-            player.isPlaying = false
-          })
-        }
-      } else {
-        if (!audio.paused) {
-          audio.pause()
-        }
+    } else {
+      if (!audio.paused) {
+        audio.pause()
       }
-    }, { immediate: true })
+    }
+  }, { immediate: true })
 
-    watch(() => player.volume, (v) => {
-      setVolume(v)
-    }, { immediate: true })
-
-    isInitialized = true
-    console.log('Audio Engine Listeners Initialized')
-  }
+  watch(() => player.volume, (v) => {
+    setVolume(v)
+  }, { immediate: true })
 
   return { play, pause, seek, setVolume }
 }
