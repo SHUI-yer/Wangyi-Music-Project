@@ -90,11 +90,62 @@ const playAll = () => {
           <span class="text-xs text-netease-subtext">{{ playlist.tracks.length }}首歌</span>
         </div>
         <div class="text-xs text-netease-subtext">
-          播放：<span class="text-netease-red font-bold">{{ (playlist.playCount / 10000).toFixed(0) }}万</span>次
+          播放：<span class="text-netease-red font-bold">{{ (playlist.playCount / 10000).toFixed(0) || 0 }}万</span>次
         </div>
       </div>
 
-      <div class="border border-netease-border rounded-sm overflow-hidden mx-4">
+      <!-- Empty State -->
+      <div v-if="playlist.tracks.length === 0" class="flex flex-col items-center justify-center py-20 space-y-4">
+        <div class="relative w-64 h-64 flex items-center justify-center">
+          <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-md">
+            <!-- Body -->
+            <path d="M100 40C70 40 50 70 50 120C50 170 65 205 100 205C135 205 150 170 150 120C150 70 130 40 100 40Z" fill="#8D5B4D"/>
+            
+            <!-- Feet -->
+            <rect x="65" y="195" width="30" height="25" rx="12" fill="#8D5B4D"/>
+            <rect x="105" y="195" width="30" height="25" rx="12" fill="#8D5B4D"/>
+
+            <!-- Tail/Seat (pink) -->
+            <path d="M140 190C160 190 175 205 170 215H140V190Z" fill="#FF6A9A" opacity="0.4"/>
+
+            <!-- Antlers -->
+            <path d="M60 75C45 50 30 55 35 80" stroke="#FF6A9A" stroke-width="14" stroke-linecap="round"/>
+            <path d="M140 75C155 50 170 55 165 80" stroke="#FF6A9A" stroke-width="14" stroke-linecap="round"/>
+
+            <!-- Headphone Band -->
+            <path d="M65 95C65 70 135 70 135 95" stroke="#5D3A31" stroke-width="12" fill="none"/>
+            
+            <!-- Earcups -->
+            <rect x="50" y="90" width="18" height="35" rx="9" fill="#FF6A9A"/>
+            <rect x="132" y="90" width="18" height="35" rx="9" fill="#FF6A9A"/>
+
+            <!-- Face -->
+            <path d="M85 125C85 130 95 130 95 125" stroke="#4A2E27" stroke-width="3" stroke-linecap="round"/>
+            <path d="M105 125C105 130 115 130 115 125" stroke="#4A2E27" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="100" cy="135" r="3" fill="#4A2E27"/>
+
+            <!-- Records Stack -->
+            <g transform="translate(45, 145)">
+              <rect x="0" y="0" width="110" height="55" rx="6" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+              <rect x="0" y="6" width="110" height="5" fill="#FF6B6B"/>
+              <rect x="0" y="15" width="110" height="5" fill="#4D96FF"/>
+              <rect x="0" y="24" width="110" height="5" fill="#6BCB77"/>
+              <rect x="0" y="33" width="110" height="5" fill="#FFD93D"/>
+              <rect x="0" y="42" width="110" height="5" fill="#333333"/>
+              <!-- Top record details -->
+              <circle cx="55" cy="27" r="22" fill="#333333"/>
+              <circle cx="55" cy="27" r="8" fill="#FF6B6B"/>
+            </g>
+
+            <!-- Hands holding records -->
+            <circle cx="55" cy="185" r="12" fill="#8D5B4D"/>
+            <circle cx="145" cy="185" r="12" fill="#8D5B4D"/>
+          </svg>
+        </div>
+        <p class="text-gray-400 text-sm tracking-widest">空空如也</p>
+      </div>
+
+      <div v-else class="border border-netease-border rounded-sm overflow-hidden mx-4">
         <table class="w-full text-xs text-left border-collapse">
           <thead>
             <tr class="bg-[#F8F8F8] border-b border-netease-border">
