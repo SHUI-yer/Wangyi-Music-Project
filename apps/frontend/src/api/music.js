@@ -25,19 +25,11 @@ export const getRecommended = async () => {
 }
 
 export const getPlaylistDetail = async (id) => {
-<<<<<<< HEAD
-  try {
-    // Handle category IDs (201-204)
-    let scanParams = ''
-    let categoryName = ''
-    
-=======
   let categoryName = `歌单 ${id}`
   let scanParams = ''
-
+  
   try {
     // Handle category IDs (201-204)
->>>>>>> parent of 5ce97f4 (lcs)
     if (id === 201) { scanParams = 'category=chinese'; categoryName = '华语经典' }
     else if (id === 202) { scanParams = 'category=pop'; categoryName = '流行前线' }
     else if (id === 203) { scanParams = 'category=rock'; categoryName = '摇滚狂热' }
@@ -51,11 +43,7 @@ export const getPlaylistDetail = async (id) => {
 
     const response = await fetch(`/api/scan-media?${scanParams}`)
     const localFiles = await response.json()
-<<<<<<< HEAD
     
-=======
-
->>>>>>> parent of 5ce97f4 (lcs)
     if (localFiles && localFiles.length > 0) {
       const tracks = localFiles.map((file, i) => ({
         id: id * 1000 + i,
@@ -76,37 +64,16 @@ export const getPlaylistDetail = async (id) => {
       })
     }
   } catch (err) {
-<<<<<<< HEAD
-    console.warn('Failed to scan playlist directory, falling back to mock.', err)
-=======
     console.warn('Failed to scan playlist directory.', err)
->>>>>>> parent of 5ce97f4 (lcs)
   }
 
-  // Fallback to generic mock tracks if folder is empty
-  const tracks = Array.from({ length: 12 }, (_, i) => ({
-    id: id * 1000 + i,
-    name: `Mock Track ${i + 1}`,
-    artist: 'Artist',
-    album: 'Album',
-    duration: '04:00',
-    cover: `https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=music+cover+${i}&image_size=square`,
-    url: '/media/music1.mp3'
-  }))
-
+  // If folder is empty, return empty tracks with correct categoryName
   return mockResponse({
     id,
-<<<<<<< HEAD
-    name: `歌单 ${id}`,
-    cover: tracks[0].cover,
-    description: '此歌单目录为空，显示 Mock 数据',
-    tracks
-=======
     name: categoryName,
     cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=empty+playlist+cover&image_size=square',
     description: `此歌单目录 (${scanParams}) 为空`,
     tracks: []
->>>>>>> parent of 5ce97f4 (lcs)
   })
 }
 
@@ -114,7 +81,7 @@ export const getSongsByCategory = async (category) => {
   try {
     const response = await fetch(`/api/scan-media?category=${category}`)
     const localFiles = await response.json()
-    
+
     if (!localFiles || localFiles.length === 0) return []
 
     return localFiles.map((file, i) => ({
@@ -137,11 +104,11 @@ export const getRandomSongs = async (count = 6) => {
     // Scan root media for "Guess You Like"
     const response = await fetch('/api/scan-media')
     const localFiles = await response.json()
-    
+
     // Shuffle and pick
     const shuffled = [...localFiles].sort(() => 0.5 - Math.random())
     const selected = shuffled.slice(0, count)
-    
+
     return selected.map((file, i) => ({
       id: 5000 + i,
       name: file.name,
@@ -157,14 +124,25 @@ export const getRandomSongs = async (count = 6) => {
 }
 
 export const searchMusic = async (keyword) => {
-  const results = Array.from({ length: 10 }, (_, i) => ({
+  try {
+    const response = await fetch(`/api/scan-media`)
+    const localFiles = await response.json()
+    const filtered = localFiles.filter(f =>
+      f.name.toLowerCase().includes(keyword.toLowerCase()) ||
+      f.artist.toLowerCase().includes(keyword.toLowerCase())
+    )
+
+    if (filtered.length > 0) return mockResponse(filtered)
+  } catch (err) { }
+
+  const results = Array.from({ length: 5 }, (_, i) => ({
     id: 2000 + i,
     name: `${keyword} Result ${i + 1}`,
     artist: `Artist ${i + 1}`,
     album: `Search Album ${i + 1}`,
     duration: '03:45',
     cover: `https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=search+result+${i}&image_size=square`,
-    url: '/media/song.mp3'
+    url: '/media/music1.mp3'
   }))
   return mockResponse(results)
 }
@@ -181,11 +159,17 @@ export const getTopLists = async () => {
 // Aliases for compatibility if needed
 export const getPersonalizedPlaylists = getRecommended;
 export const getNewSongs = async () => {
+  try {
+    const response = await fetch('/api/scan-media')
+    const localFiles = await response.json()
+    if (localFiles.length > 0) return localFiles.slice(0, 12)
+  } catch (err) { }
+
   return Array.from({ length: 12 }).map((_, i) => ({
     id: `new-${i}`,
     name: `New Premium Song ${i + 1}`,
     artist: `Artist ${i + 1}`,
     cover: `https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=song+cover+${i}&image_size=square`,
-    url: '/media/song.mp3'
+    url: '/media/music1.mp3'
   }))
 }

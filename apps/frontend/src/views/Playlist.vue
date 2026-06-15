@@ -1,18 +1,27 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getPlaylistDetail } from '../api/music'
 import { usePlayerStore } from '../stores/player'
-import { PlayCircle, Share2, Download, MessageSquare, Plus, Clock, Play, Heart } from 'lucide-vue-next'
+import { PlayCircle, Share2, Download, MessageSquare, Plus, Clock, Play, Heart, RefreshCw } from 'lucide-vue-next'
 
 const route = useRoute()
 const playlist = ref(null)
+const loading = ref(false)
 const player = usePlayerStore()
 
-onMounted(async () => {
-  const res = await getPlaylistDetail(route.params.id)
-  playlist.value = res.data
-})
+const fetchPlaylist = async () => {
+  loading.value = true
+  try {
+    const res = await getPlaylistDetail(route.params.id)
+    playlist.value = res.data
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchPlaylist)
+watch(() => route.params.id, fetchPlaylist)
 
 const playTrack = (track) => {
   player.setTrack(track, playlist.value.tracks)
@@ -88,17 +97,20 @@ const playAll = () => {
         <div class="flex items-baseline space-x-4">
           <h3 class="text-xl font-bold">歌曲列表</h3>
           <span class="text-xs text-netease-subtext">{{ playlist.tracks.length }}首歌</span>
+          <button @click="fetchPlaylist" 
+                  class="flex items-center space-x-1 text-[10px] text-blue-500 hover:text-blue-700 transition-colors"
+                  :class="{ 'animate-spin': loading }">
+            <RefreshCw class="w-3 h-3" />
+            <span>刷新列表</span>
+          </button>
         </div>
         <div class="text-xs text-netease-subtext">
-          播放：<span class="text-netease-red font-bold">{{ (playlist.playCount / 10000).toFixed(0) }}万</span>次
+          播放：<span class="text-netease-red font-bold">{{ (playlist.playCount / 10000).toFixed(0) || 0 }}万</span>次
         </div>
       </div>
 
-<<<<<<< HEAD
-      <div class="border border-netease-border rounded-sm overflow-hidden mx-4">
-=======
       <!-- Empty State -->
-      <div v-if="playlist.tracks.length === 0" class="flex flex-col items-center justify-center py-20 space-y-4">
+      <div v-if="!loading && (!playlist.tracks || playlist.tracks.length === 0)" class="flex flex-col items-center justify-center py-20 space-y-4">
         <div class="relative w-64 h-64 flex items-center justify-center">
           <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-md">
             <!-- Body -->
@@ -148,8 +160,13 @@ const playAll = () => {
         <p class="text-gray-400 text-sm tracking-widest">空空如也</p>
       </div>
 
+      <!-- Loading State -->
+      <div v-else-if="loading" class="flex flex-col items-center justify-center py-20 space-y-2">
+        <RefreshCw class="w-8 h-8 text-netease-red animate-spin" />
+        <p class="text-xs text-netease-subtext">正在努力扫描音乐...</p>
+      </div>
+
       <div v-else class="border border-netease-border rounded-sm overflow-hidden mx-4">
->>>>>>> parent of 5ce97f4 (lcs)
         <table class="w-full text-xs text-left border-collapse">
           <thead>
             <tr class="bg-[#F8F8F8] border-b border-netease-border">
