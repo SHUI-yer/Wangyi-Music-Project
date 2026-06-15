@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { ref, onMounted } from 'vue'
 import { Music, FolderSearch, Plus, Play, Trash2, Heart } from 'lucide-vue-next'
 import { usePlayerStore } from '../stores/player'
@@ -83,8 +83,12 @@ const playLocal = (track) => {
     <!-- Header -->
     <header class="bg-netease-bg p-8 rounded-2xl shadow-sm border border-netease-border flex items-center justify-between">
       <div class="flex items-center space-x-6">
-        <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-50 shadow-inner">
-          <img src="https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=cool+user+avatar+minimalist&image_size=square" class="w-full h-full object-cover">
+        <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center border-2 border-red-200 shadow-inner overflow-hidden group">
+          <svg viewBox="0 0 24 24" class="w-14 h-14 text-netease-red transition-transform group-hover:scale-110 duration-500" fill="currentColor">
+            <path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z" />
+            <circle cx="12" cy="13" r="3" fill="rgba(255,255,255,0.8)" />
+            <path d="M12.5,11.5v2.2c-0.2-0.1-0.4-0.2-0.7-0.2c-0.7,0-1.3,0.6-1.3,1.2s0.6,1.2,1.3,1.2s1.3-0.6,1.3-1.2v-2.5h1.5v-0.7H12.5z" fill="red" />
+          </svg>
         </div>
         <div>
           <h2 class="text-3xl font-bold text-gray-800">本地音乐库</h2>

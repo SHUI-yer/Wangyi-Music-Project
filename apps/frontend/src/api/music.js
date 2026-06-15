@@ -9,19 +9,19 @@ const mockResponse = (data) => ({
 
 export const getBanners = async () => {
   return mockResponse([
-    { id: 1, imageUrl: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=netease+music+banner+artistic+abstract+red&image_size=landscape_16_9' },
-    { id: 2, imageUrl: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=music+concert+crowd+neon+lights&image_size=landscape_16_9' },
-    { id: 3, imageUrl: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=chill+lofi+hip+hop+beats+illustration&image_size=landscape_16_9' },
+    { id: 1, imageUrl: '/assets/banners/banner1.jpg' },
+    { id: 2, imageUrl: '/assets/banners/banner2.jpg' },
+    { id: 3, imageUrl: '/assets/banners/banner3.jpg' },
   ])
 }
 
 export const getRecommended = async () => {
   return mockResponse([
-    { id: 101, name: getFallbackPlaylistConfig(101).name, cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+1&image_size=square', playCount: 1250000 },
-    { id: 102, name: getFallbackPlaylistConfig(102).name, cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+2&image_size=square', playCount: 850000 },
-    { id: 103, name: getFallbackPlaylistConfig(103).name, cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+3&image_size=square', playCount: 2350000 },
-    { id: 104, name: getFallbackPlaylistConfig(104).name, cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+4&image_size=square', playCount: 750000 },
-    { id: 105, name: getFallbackPlaylistConfig(105).name, cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=album+cover+art+5&image_size=square', playCount: 1550000 },
+    { id: 101, name: getFallbackPlaylistConfig(101).name, cover: getFallbackPlaylistConfig(101).cover, playCount: 1250000 },
+    { id: 102, name: getFallbackPlaylistConfig(102).name, cover: getFallbackPlaylistConfig(102).cover, playCount: 850000 },
+    { id: 103, name: getFallbackPlaylistConfig(103).name, cover: getFallbackPlaylistConfig(103).cover, playCount: 2350000 },
+    { id: 104, name: getFallbackPlaylistConfig(104).name, cover: getFallbackPlaylistConfig(104).cover, playCount: 750000 },
+    { id: 105, name: getFallbackPlaylistConfig(105).name, cover: getFallbackPlaylistConfig(105).cover, playCount: 1550000 },
   ])
 }
 
@@ -29,6 +29,7 @@ export const getPlaylistDetail = async (id) => {
   let categoryName = ''
   let scanParams = ''
   let description = ''
+  let cover = ''
 
   try {
     // 1. 读取外部配置文件 (Configuration-driven)
@@ -39,12 +40,14 @@ export const getPlaylistDetail = async (id) => {
       scanParams = `category=${config.category}`
       categoryName = config.name
       description = config.description
+      cover = config.cover
     } else {
       // 未命中，使用兜底配置 (精品歌单 list1-list5)
       const fallbackConfig = getFallbackPlaylistConfig(id)
       scanParams = `playlistId=${fallbackConfig.playlistId}`
       categoryName = fallbackConfig.name
       description = fallbackConfig.description
+      cover = fallbackConfig.cover
     }
 
     const response = await fetch(`/api/scan-media?${scanParams}`)
@@ -67,7 +70,7 @@ export const getPlaylistDetail = async (id) => {
       return mockResponse({
         id,
         name: categoryName,
-        cover: tracks[0].cover,
+        cover: cover || tracks[0].cover,
         description,
         playCount,
         tracks
@@ -81,7 +84,7 @@ export const getPlaylistDetail = async (id) => {
   return mockResponse({
     id,
     name: categoryName,
-    cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=empty+playlist+cover&image_size=square',
+    cover: cover || 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=empty+playlist+cover&image_size=square',
     description: `此歌单目录 (${scanParams}) 暂无音乐，快去添加一些吧！`,
     playCount: 0,
     tracks: []
