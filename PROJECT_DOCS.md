@@ -88,6 +88,19 @@
   - 通过比对 `track.id` 或 `track.url`，在全局任意列表（包括首页、播放条、本地音乐、最近播放等）内动态渲染 `<Heart>` 图标的颜色。
   - 所有点赞数据被持久化到 `localStorage` 中。
 
+### 4.4 首页分类入口与动态歌单映射 (配置驱动)
+- **痛点**: 如果为首页的“华语、流行、摇滚、爵士”等分类各自写一个页面，会导致代码大量冗余；如果将文案硬编码在 `api/music.js` 中，后期修改文案非常危险且难以维护。
+- **方案**:
+  - 采用**路由传参 + 外部配置驱动**模式。首页分类面板点击“更多”时，通过 `$router.push('/playlist/:id')` 跳转到统一的 `Playlist.vue` 组件。
+  - **核心配置文件**: `src/config/playlistConfig.js`。该文件抽取了所有的分类映射和介绍文案。
+  - **如何修改文案或新增分类？ (操作指南)**:
+    1. **修改现有文案**：直接打开 `src/config/playlistConfig.js`，修改对应 ID 的 `name` (标题) 或 `description` (介绍) 即可，无需改动任何 Vue 视图逻辑。
+    2. **新增分类 (如古典 classical)**：
+       - 在 `playlistConfig.js` 中的 `PLAYLIST_CONFIG` 对象新增一个键值对（例如 `205`），配置好 `category: 'classical'` 以及对应的文案。
+       - 在服务器的 `public/media/` 目录下新建 `classical` 文件夹并放入 MP3 文件。
+       - 前端通过 `$router.push('/playlist/205')` 即可自动渲染出该分类的专属详情页。
+    3. **修改精品歌单兜底文案**：修改 `playlistConfig.js` 末尾的 `getFallbackPlaylistConfig` 返回值即可。
+
 ---
 
 ## 5. 历史排雷记录 (Gotchas & Bug Fixes)

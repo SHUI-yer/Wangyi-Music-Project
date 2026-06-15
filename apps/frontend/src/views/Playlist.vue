@@ -48,33 +48,13 @@ const playAll = () => {
         </div>
 
         <div class="flex items-center space-x-2">
-          <div class="flex items-center divide-x divide-netease-darkRed">
-            <button @click="playAll" class="flex items-center space-x-2 bg-netease-red text-white pl-4 pr-3 py-1.5 rounded-l-sm hover:bg-netease-darkRed transition-colors text-sm">
-              <PlayCircle class="w-4 h-4 fill-current" />
-              <span>播放</span>
-            </button>
-            <button class="bg-netease-red text-white px-2 py-1.5 rounded-r-sm hover:bg-netease-darkRed transition-colors text-sm">
-              <Plus class="w-4 h-4" />
-            </button>
+            <div class="flex items-center divide-x divide-netease-darkRed">
+              <button @click="playAll" class="flex items-center space-x-2 bg-netease-red text-white pl-4 pr-4 py-1.5 rounded-full hover:bg-netease-darkRed transition-colors text-sm font-bold shadow-md shadow-red-200">
+                <Play class="w-4 h-4 fill-current" />
+                <span>播放全部</span>
+              </button>
+            </div>
           </div>
-          
-          <button class="flex items-center space-x-2 px-3 py-1.5 border border-netease-border rounded-sm hover:bg-gray-50 text-xs shadow-sm">
-            <Plus class="w-3.5 h-3.5" />
-            <span>收藏</span>
-          </button>
-          <button class="flex items-center space-x-2 px-3 py-1.5 border border-netease-border rounded-sm hover:bg-gray-50 text-xs shadow-sm">
-            <Share2 class="w-3.5 h-3.5" />
-            <span>分享</span>
-          </button>
-          <button class="flex items-center space-x-2 px-3 py-1.5 border border-netease-border rounded-sm hover:bg-gray-50 text-xs shadow-sm">
-            <Download class="w-3.5 h-3.5" />
-            <span>下载</span>
-          </button>
-          <button class="flex items-center space-x-2 px-3 py-1.5 border border-netease-border rounded-sm hover:bg-gray-50 text-xs shadow-sm">
-            <MessageSquare class="w-3.5 h-3.5" />
-            <span>评论</span>
-          </button>
-        </div>
 
         <div class="text-xs text-netease-subtext space-y-1">
           <p class="line-clamp-2"><span class="text-netease-text">介绍：</span>{{ playlist.description }}</p>
@@ -90,7 +70,7 @@ const playAll = () => {
           <span class="text-xs text-netease-subtext">{{ playlist.tracks.length }}首歌</span>
         </div>
         <div class="text-xs text-netease-subtext">
-          播放：<span class="text-netease-red font-bold">{{ (playlist.playCount / 10000).toFixed(0) }}万</span>次
+          播放：<span class="text-netease-red font-bold">{{ playlist.playCount ? (playlist.playCount / 10000).toFixed(1) : 0 }}万</span>次
         </div>
       </div>
 

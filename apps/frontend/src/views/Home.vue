@@ -168,7 +168,7 @@ onUnmounted(() => {
             <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-200">
               <Music class="w-6 h-6" />
             </div>
-            <p class="text-xs text-gray-300 italic">此分类目录下暂无歌曲<br>(public/media/{{ cat }})</p>
+            <p class="text-xs text-gray-300 italic">此分类目录下暂无歌曲</p>
           </div>
           <div v-else class="divide-y divide-gray-50">
             <div v-for="(song, index) in songs" :key="song.id"
