@@ -1,18 +1,27 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getPlaylistDetail } from '../api/music'
 import { usePlayerStore } from '../stores/player'
-import { PlayCircle, Share2, Download, MessageSquare, Plus, Clock, Play, Heart } from 'lucide-vue-next'
+import { PlayCircle, Share2, Download, MessageSquare, Plus, Clock, Play, Heart, RefreshCw } from 'lucide-vue-next'
 
 const route = useRoute()
 const playlist = ref(null)
+const loading = ref(false)
 const player = usePlayerStore()
 
-onMounted(async () => {
-  const res = await getPlaylistDetail(route.params.id)
-  playlist.value = res.data
-})
+const fetchPlaylist = async () => {
+  loading.value = true
+  try {
+    const res = await getPlaylistDetail(route.params.id)
+    playlist.value = res.data
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchPlaylist)
+watch(() => route.params.id, fetchPlaylist)
 
 const playTrack = (track) => {
   player.setTrack(track, playlist.value.tracks)
@@ -88,6 +97,12 @@ const playAll = () => {
         <div class="flex items-baseline space-x-4">
           <h3 class="text-xl font-bold">歌曲列表</h3>
           <span class="text-xs text-netease-subtext">{{ playlist.tracks.length }}首歌</span>
+          <button @click="fetchPlaylist" 
+                  class="flex items-center space-x-1 text-[10px] text-blue-500 hover:text-blue-700 transition-colors"
+                  :class="{ 'animate-spin': loading }">
+            <RefreshCw class="w-3 h-3" />
+            <span>刷新列表</span>
+          </button>
         </div>
         <div class="text-xs text-netease-subtext">
           播放：<span class="text-netease-red font-bold">{{ (playlist.playCount / 10000).toFixed(0) || 0 }}万</span>次
@@ -96,53 +111,60 @@ const playAll = () => {
 
       <!-- Empty State -->
       <div v-if="playlist.tracks.length === 0" class="flex flex-col items-center justify-center py-20 space-y-4">
-        <div class="relative w-64 h-64 flex items-center justify-center">
-          <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-md">
-            <!-- Body -->
-            <path d="M100 40C70 40 50 70 50 120C50 170 65 205 100 205C135 205 150 170 150 120C150 70 130 40 100 40Z" fill="#8D5B4D"/>
-            
-            <!-- Feet -->
-            <rect x="65" y="195" width="30" height="25" rx="12" fill="#8D5B4D"/>
-            <rect x="105" y="195" width="30" height="25" rx="12" fill="#8D5B4D"/>
-
-            <!-- Tail/Seat (pink) -->
-            <path d="M140 190C160 190 175 205 170 215H140V190Z" fill="#FF6A9A" opacity="0.4"/>
-
-            <!-- Antlers -->
-            <path d="M60 75C45 50 30 55 35 80" stroke="#FF6A9A" stroke-width="14" stroke-linecap="round"/>
-            <path d="M140 75C155 50 170 55 165 80" stroke="#FF6A9A" stroke-width="14" stroke-linecap="round"/>
-
-            <!-- Headphone Band -->
-            <path d="M65 95C65 70 135 70 135 95" stroke="#5D3A31" stroke-width="12" fill="none"/>
-            
-            <!-- Earcups -->
-            <rect x="50" y="90" width="18" height="35" rx="9" fill="#FF6A9A"/>
-            <rect x="132" y="90" width="18" height="35" rx="9" fill="#FF6A9A"/>
-
-            <!-- Face -->
-            <path d="M85 125C85 130 95 130 95 125" stroke="#4A2E27" stroke-width="3" stroke-linecap="round"/>
-            <path d="M105 125C105 130 115 130 115 125" stroke="#4A2E27" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="100" cy="135" r="3" fill="#4A2E27"/>
-
-            <!-- Records Stack -->
-            <g transform="translate(45, 145)">
-              <rect x="0" y="0" width="110" height="55" rx="6" fill="white" stroke="#E5E7EB" stroke-width="1"/>
-              <rect x="0" y="6" width="110" height="5" fill="#FF6B6B"/>
-              <rect x="0" y="15" width="110" height="5" fill="#4D96FF"/>
-              <rect x="0" y="24" width="110" height="5" fill="#6BCB77"/>
-              <rect x="0" y="33" width="110" height="5" fill="#FFD93D"/>
-              <rect x="0" y="42" width="110" height="5" fill="#333333"/>
-              <!-- Top record details -->
-              <circle cx="55" cy="27" r="22" fill="#333333"/>
-              <circle cx="55" cy="27" r="8" fill="#FF6B6B"/>
-            </g>
-
-            <!-- Hands holding records -->
-            <circle cx="55" cy="185" r="12" fill="#8D5B4D"/>
-            <circle cx="145" cy="185" r="12" fill="#8D5B4D"/>
-          </svg>
+        <div v-if="loading" class="flex flex-col items-center space-y-2">
+          <RefreshCw class="w-8 h-8 text-netease-red animate-spin" />
+          <p class="text-xs text-netease-subtext">正在扫描目录...</p>
         </div>
-        <p class="text-gray-400 text-sm tracking-widest">空空如也</p>
+        <template v-else>
+          <div class="relative w-64 h-64 flex items-center justify-center">
+            <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-md">
+              <!-- Body -->
+              <path d="M100 40C70 40 50 70 50 120C50 170 65 205 100 205C135 205 150 170 150 120C150 70 130 40 100 40Z" fill="#8D5B4D"/>
+              
+              <!-- Feet -->
+              <rect x="65" y="195" width="30" height="25" rx="12" fill="#8D5B4D"/>
+              <rect x="105" y="195" width="30" height="25" rx="12" fill="#8D5B4D"/>
+
+              <!-- Tail/Seat (pink) -->
+              <path d="M140 190C160 190 175 205 170 215H140V190Z" fill="#FF6A9A" opacity="0.4"/>
+
+              <!-- Antlers -->
+              <path d="M60 75C45 50 30 55 35 80" stroke="#FF6A9A" stroke-width="14" stroke-linecap="round"/>
+              <path d="M140 75C155 50 170 55 165 80" stroke="#FF6A9A" stroke-width="14" stroke-linecap="round"/>
+
+              <!-- Headphone Band -->
+              <path d="M65 95C65 70 135 70 135 95" stroke="#5D3A31" stroke-width="12" fill="none"/>
+              
+              <!-- Earcups -->
+              <rect x="50" y="90" width="18" height="35" rx="9" fill="#FF6A9A"/>
+              <rect x="132" y="90" width="18" height="35" rx="9" fill="#FF6A9A"/>
+
+              <!-- Face -->
+              <path d="M85 125C85 130 95 130 95 125" stroke="#4A2E27" stroke-width="3" stroke-linecap="round"/>
+              <path d="M105 125C105 130 115 130 115 125" stroke="#4A2E27" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="100" cy="135" r="3" fill="#4A2E27"/>
+
+              <!-- Records Stack -->
+              <g transform="translate(45, 145)">
+                <rect x="0" y="0" width="110" height="55" rx="6" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+                <rect x="0" y="6" width="110" height="5" fill="#FF6B6B"/>
+                <rect x="0" y="15" width="110" height="5" fill="#4D96FF"/>
+                <rect x="0" y="24" width="110" height="5" fill="#6BCB77"/>
+                <rect x="0" y="33" width="110" height="5" fill="#FFD93D"/>
+                <rect x="0" y="42" width="110" height="5" fill="#333333"/>
+                <!-- Top record details -->
+                <circle cx="55" cy="27" r="22" fill="#333333"/>
+                <circle cx="55" cy="27" r="8" fill="#FF6B6B"/>
+              </g>
+
+              <!-- Hands holding records -->
+              <circle cx="55" cy="185" r="12" fill="#8D5B4D"/>
+              <circle cx="145" cy="185" r="12" fill="#8D5B4D"/>
+            </svg>
+          </div>
+          <p class="text-gray-400 text-sm tracking-widest">空空如也</p>
+          <p class="text-[10px] text-gray-300 max-w-xs text-center">{{ playlist.description }}</p>
+        </template>
       </div>
 
       <div v-else class="border border-netease-border rounded-sm overflow-hidden mx-4">
