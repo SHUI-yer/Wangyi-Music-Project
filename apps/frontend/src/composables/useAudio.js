@@ -16,9 +16,9 @@ const audio = (() => {
   return new Audio()
 })()
 
-let isInitialized = false
 let globalPlayer = null
 let lastSrcSetTime = 0
+let errorCount = 0
 
 // --- Core Event Handlers ---
 const handleTimeUpdate = () => {
@@ -38,9 +38,22 @@ const handleEnded = () => {
   }
 }
 
-const handleError = () => {
-  console.error('Audio playback error, skipping to next track')
-  if (globalPlayer) globalPlayer.next()
+const handleError = (e) => {
+  console.error('Audio playback error', e)
+  if (globalPlayer) {
+    errorCount++
+    // 保护机制：如果连续报错超过3次，强制停止，防止无限死循环爆内存
+    if (errorCount > 3) {
+      console.warn('Too many errors, stopping playback')
+      globalPlayer.isPlaying = false
+      errorCount = 0
+      return
+    }
+    // 延迟 1 秒再切歌，避免瞬间发生成千上万次请求卡死浏览器
+    setTimeout(() => {
+      globalPlayer.next()
+    }, 1000)
+  }
 }
 
 const handleLoadStart = () => {
@@ -49,6 +62,7 @@ const handleLoadStart = () => {
 
 const handleCanPlay = () => {
   if (globalPlayer) {
+    errorCount = 0 // 成功加载后重置错误计数
     globalPlayer.isBuffering = false
     if (globalPlayer.isPlaying) {
       console.log('Audio Can Play, attempting to start...')
@@ -64,6 +78,8 @@ const handleCanPlay = () => {
   }
 }
 
+let watchersInitialized = false
+
 // Attach listeners safely for HMR
 if (!audio.__hasListeners) {
   audio.addEventListener('timeupdate', handleTimeUpdate)
@@ -75,8 +91,6 @@ if (!audio.__hasListeners) {
   audio.__hasListeners = true
 }
 
-// NOTE: We REMOVED handlePlay/handlePause to prevent feedback loops with the watcher.
-
 export function useAudio() {
   const player = usePlayerStore()
   globalPlayer = player
@@ -84,8 +98,10 @@ export function useAudio() {
   const play = () => {
     if (audio.src) {
       audio.play().catch((err) => {
-        console.warn('Playback failed (possibly autoplay policy):', err)        
-        player.isPlaying = false
+        if (err.name !== 'AbortError') {
+          console.warn('Playback failed:', err)
+          player.isPlaying = false
+        }
       })
     }
   }
@@ -103,48 +119,57 @@ export function useAudio() {
     audio.volume = Math.max(0, Math.min(1, v / 100))
   }
 
-  // Watchers MUST be re-created on component setup to survive HMR
-  watch(() => player.currentTrack, (newTrack) => {
-    if (newTrack?.url) {
-      const absoluteUrl = new URL(newTrack.url, window.location.origin).href  
-      if (audio.src !== absoluteUrl) {
-        console.log('Audio Source Changing:', newTrack.name)
-        lastSrcSetTime = Date.now()
-        audio.src = newTrack.url
-        audio.load()
+  if (!watchersInitialized) {
+    watchersInitialized = true
+    
+    watch(() => player.currentTrack, (newTrack) => {
+      if (newTrack?.url) {
+        const absoluteUrl = new URL(newTrack.url, window.location.origin).href    
+        if (audio.src !== absoluteUrl) {
+          console.log('Audio Source Changing:', newTrack.name)
+          lastSrcSetTime = Date.now()
+          audio.src = newTrack.url
+          audio.load()
+        }
       }
-    }
-  }, { immediate: true })
+    }, { immediate: true })
 
-  watch(() => player.playbackTrigger, () => {
-    const timeSinceSrcSet = Date.now() - lastSrcSetTime
-    if (player.currentTrack && player.isPlaying && timeSinceSrcSet > 100) {   
-      console.log('Playback Triggered (Restart/Same Track)')
-      audio.currentTime = 0
-      audio.play().catch((err) => {
-        console.warn('Playback Trigger failed:', err)
-      })
-    }
-  })
-
-  watch(() => player.isPlaying, (playing) => {
-    if (playing) {
-      if (audio.paused) {
+    watch(() => player.playbackTrigger, () => {
+      const timeSinceSrcSet = Date.now() - lastSrcSetTime
+      if (player.currentTrack && player.isPlaying && timeSinceSrcSet > 100) {     
+        console.log('Playback Triggered (Restart/Same Track)')
+        audio.currentTime = 0
         audio.play().catch((err) => {
-          console.warn('Manual Play failed:', err)
-          player.isPlaying = false
+          if (err.name !== 'AbortError') {
+            console.warn('Playback Trigger failed:', err)
+          }
         })
       }
-    } else {
-      if (!audio.paused) {
-        audio.pause()
-      }
-    }
-  }, { immediate: true })
+    })
 
-  watch(() => player.volume, (v) => {
-    setVolume(v)
-  }, { immediate: true })
+    watch(() => player.isPlaying, (playing) => {
+      if (playing) {
+        if (audio.paused) {
+          audio.play().catch((err) => {
+            if (err.name === 'AbortError') {        
+              console.log('Play aborted by new load, ignoring...')
+            } else {
+              console.warn('Manual Play failed:', err)
+              player.isPlaying = false
+            }
+          })
+        }
+      } else {
+        if (!audio.paused) {
+          audio.pause()
+        }
+      }
+    }, { immediate: true })
+
+    watch(() => player.volume, (v) => {
+      setVolume(v)
+    }, { immediate: true })
+  }
 
   return { play, pause, seek, setVolume }
 }

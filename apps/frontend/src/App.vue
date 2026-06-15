@@ -78,7 +78,7 @@ onUnmounted(() => {
       <div class="flex items-center space-x-6 text-white/90 text-sm">
         <div class="flex items-center space-x-2 cursor-pointer hover:text-white group" @click="router.push('/user')">
           <div class="w-7 h-7 rounded-full bg-gray-200 border border-white/20 overflow-hidden">
-             <img :src="'/assets/user/avatar.jpg'" @error="(e) => e.target.src = 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=simple+user+avatar+gray&image_size=square'" class="w-full h-full object-cover">
+             <img :src="'/assets/user/avatar.jpg'" @error="(e) => { if (!e.target.dataset.errorHandled) { e.target.dataset.errorHandled = 'true'; e.target.src = 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=simple+user+avatar+gray&image_size=square' } }" class="w-full h-full object-cover">
           </div>
           <span class="group-hover:underline">网抑云深夜emo</span>
         </div>
