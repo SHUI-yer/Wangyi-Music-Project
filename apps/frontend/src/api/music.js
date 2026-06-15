@@ -25,19 +25,11 @@ export const getRecommended = async () => {
 }
 
 export const getPlaylistDetail = async (id) => {
-<<<<<<< HEAD
-  try {
-    // Handle category IDs (201-204)
-    let scanParams = ''
-    let categoryName = ''
-    
-=======
   let categoryName = `歌单 ${id}`
   let scanParams = ''
 
   try {
     // Handle category IDs (201-204)
->>>>>>> parent of 5ce97f4 (lcs)
     if (id === 201) { scanParams = 'category=chinese'; categoryName = '华语经典' }
     else if (id === 202) { scanParams = 'category=pop'; categoryName = '流行前线' }
     else if (id === 203) { scanParams = 'category=rock'; categoryName = '摇滚狂热' }
@@ -51,11 +43,7 @@ export const getPlaylistDetail = async (id) => {
 
     const response = await fetch(`/api/scan-media?${scanParams}`)
     const localFiles = await response.json()
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> parent of 5ce97f4 (lcs)
     if (localFiles && localFiles.length > 0) {
       const tracks = localFiles.map((file, i) => ({
         id: id * 1000 + i,
@@ -76,11 +64,7 @@ export const getPlaylistDetail = async (id) => {
       })
     }
   } catch (err) {
-<<<<<<< HEAD
-    console.warn('Failed to scan playlist directory, falling back to mock.', err)
-=======
     console.warn('Failed to scan playlist directory.', err)
->>>>>>> parent of 5ce97f4 (lcs)
   }
 
   // Fallback to generic mock tracks if folder is empty
@@ -96,17 +80,10 @@ export const getPlaylistDetail = async (id) => {
 
   return mockResponse({
     id,
-<<<<<<< HEAD
-    name: `歌单 ${id}`,
-    cover: tracks[0].cover,
-    description: '此歌单目录为空，显示 Mock 数据',
-    tracks
-=======
     name: categoryName,
     cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=empty+playlist+cover&image_size=square',
     description: `此歌单目录 (${scanParams}) 为空`,
     tracks: []
->>>>>>> parent of 5ce97f4 (lcs)
   })
 }
 
