@@ -1,0 +1,42 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+apps/frontend/node_modules/
+apps/frontend/dist/
+dist/
+node_modules/
+*.local
+
+# Editor folders
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Project specific
+# apps/frontend/public/media/local/*
+# apps/frontend/public/assets/user/avatar.jpg
+
+# Temporary files
+_workflow/
+*.tmp
+*.bak

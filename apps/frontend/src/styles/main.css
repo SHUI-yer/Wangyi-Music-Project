@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-netease-bg text-netease-text overflow-hidden select-none;
+  font-family: "Microsoft YaHei", "微软雅黑", Arial, Helvetica, sans-serif;
+}
+
+/* Scrollbar Style */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E1E1E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #D1D1D1;
+}
+
+/* Common Classes */
+.active-menu {
+  @apply bg-[#E2E2E2] text-netease-red font-bold !border-l-4 border-netease-red;
+}
+
+.song-list-item:nth-child(even) {
+  @apply bg-[#F7F7F7];
+}
+
+.song-list-item:hover {
+  @apply bg-[#EBEDED];
+}
+
+/* Page Transition */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+
+/* Custom Slider */
+input[type="range"] {
+  @apply appearance-none bg-gray-200 h-1 rounded-full outline-none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  @apply appearance-none w-3 h-3 bg-white border border-gray-300 rounded-full cursor-pointer shadow-sm hover:scale-110 transition-transform;
+}
+
+.netease-card {
+  @apply bg-white border border-netease-border rounded-sm shadow-sm;
+}
+
+.btn-red {
+  @apply bg-netease-red hover:bg-netease-darkRed text-white px-4 py-1.5 rounded-sm transition-colors text-sm font-medium;
+}
+
+/* Typography Helpers */
+.text-primary {
+  @apply text-netease-text;
+}
+
+.text-secondary {
+  @apply text-netease-subtext;
+}
+
+.text-hint {
+  @apply text-netease-hint;
+}
+
+/* Sidebar Specific */
+.sidebar-title {
+  @apply text-xs text-netease-hint px-3 py-2 font-medium;
+}
+
+.sidebar-item {
+  @apply flex items-center space-x-3 px-3 py-2 rounded text-sm text-netease-text hover:bg-[#EAEAEA] transition-colors;
+}
