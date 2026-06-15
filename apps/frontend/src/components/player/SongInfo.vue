@@ -30,7 +30,12 @@ const handleCoverClick = () => {
     <div class="truncate">
       <div class="text-sm truncate flex items-center text-netease-text font-medium">
         <span>{{ player.currentTrack?.name || '未知歌曲' }}</span>
-        <Heart class="w-3.5 h-3.5 ml-2 text-netease-hint cursor-pointer hover:text-netease-red transition-colors" />
+        <button v-if="player.currentTrack" @click="player.toggleFavorite(player.currentTrack)" class="ml-2 focus:outline-none">
+          <Heart 
+            class="w-3.5 h-3.5 cursor-pointer transition-colors" 
+            :class="player.isFavorite(player.currentTrack) ? 'text-netease-red fill-current' : 'text-netease-hint hover:text-netease-red'" 
+          />
+        </button>
       </div>
       <div class="text-xs text-netease-subtext truncate">{{ player.currentTrack?.artist || '未知歌手' }}</div>
     </div>

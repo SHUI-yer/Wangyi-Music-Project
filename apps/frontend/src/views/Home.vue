@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import { getBanners, getRecommended, getRandomSongs, getSongsByCategory } from '../api/music'
-import { Play, PlayCircle, RefreshCw, ChevronRight, Music } from 'lucide-vue-next'
+import { Play, PlayCircle, RefreshCw, ChevronRight, Music, Heart } from 'lucide-vue-next'
 import { usePlayerStore } from '../stores/player'
 
 const banners = ref([])
@@ -133,6 +133,12 @@ onUnmounted(() => {
             <div class="text-sm font-medium text-gray-800 truncate">{{ song.name }}</div>
             <div class="text-xs text-gray-500 truncate">{{ song.artist }}</div>
           </div>
+          <button @click.stop="player.toggleFavorite(song)" class="ml-2 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity">
+            <Heart 
+              class="w-4 h-4 cursor-pointer transition-colors" 
+              :class="player.isFavorite(song) ? 'text-netease-red fill-current' : 'text-gray-400 hover:text-netease-red'" 
+            />
+          </button>
         </div>
       </div>
     </section>
@@ -174,6 +180,12 @@ onUnmounted(() => {
                 <div class="text-sm font-medium text-gray-800 truncate">{{ song.name }}</div>
                 <div class="text-[10px] text-gray-400 truncate">{{ song.artist }}</div>
               </div>
+              <button @click.stop="player.toggleFavorite(song)" class="mr-3 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity">
+                <Heart 
+                  class="w-4 h-4 cursor-pointer transition-colors" 
+                  :class="player.isFavorite(song) ? 'text-netease-red fill-current' : 'text-gray-400 hover:text-netease-red'" 
+                />
+              </button>
               <PlayCircle class="w-5 h-5 text-netease-red opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>

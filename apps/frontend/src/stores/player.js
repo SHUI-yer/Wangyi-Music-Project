@@ -20,6 +20,7 @@ export const usePlayerStore = defineStore('player', {
       isDragging: false,
       isBuffering: false,
       recentTracks: savedState.recentTracks || [],
+      favorites: savedState.favorites || [],
       localTracks: [],
       playbackTrigger: 0, // Used to force restart same track
       isFullscreen: false
@@ -30,6 +31,12 @@ export const usePlayerStore = defineStore('player', {
     currentProgress: (state) => {
       if (!state.duration) return 0
       return (state.currentTime / state.duration) * 100
+    },
+    isFavorite: (state) => {
+      return (track) => {
+        if (!track) return false
+        return state.favorites.some(t => t.id === track.id || t.url === track.url)
+      }
     }
   },
 
@@ -155,6 +162,17 @@ export const usePlayerStore = defineStore('player', {
       this.saveState()
     },
 
+    toggleFavorite(track) {
+      if (!track) return
+      const index = this.favorites.findIndex(t => t.id === track.id || t.url === track.url)
+      if (index !== -1) {
+        this.favorites.splice(index, 1)
+      } else {
+        this.favorites.unshift(track)
+      }
+      this.saveState()
+    },
+
     toggleFullscreen() {
       this.isFullscreen = !this.isFullscreen
     },
@@ -166,7 +184,8 @@ export const usePlayerStore = defineStore('player', {
         currentIndex: this.currentIndex,
         volume: this.volume,
         playMode: this.playMode,
-        recentTracks: this.recentTracks
+        recentTracks: this.recentTracks,
+        favorites: this.favorites
       }))
     }
   }

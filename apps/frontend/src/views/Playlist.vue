@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { getPlaylistDetail } from '../api/music'
 import { usePlayerStore } from '../stores/player'
-import { PlayCircle, Share2, Download, MessageSquare, Plus, Clock, Play } from 'lucide-vue-next'
+import { PlayCircle, Share2, Download, MessageSquare, Plus, Clock, Play, Heart } from 'lucide-vue-next'
 
 const route = useRoute()
 const playlist = ref(null)
@@ -112,8 +112,12 @@ const playAll = () => {
                 :class="{ 'bg-gray-100': player.currentTrack?.id === track.id }">
               <td class="px-4 py-3 flex items-center space-x-2 text-netease-subtext">
                 <span>{{ index + 1 }}</span>
-                <PlayCircle v-if="player.currentTrack?.id === track.id" class="w-4 h-4 text-netease-red" />
-                <Play v-else @click="playTrack(track)" class="w-3.5 h-3.5 text-netease-subtext hover:text-netease-text cursor-pointer" />
+                <button @click.stop="player.toggleFavorite(track)" class="focus:outline-none">
+                  <Heart 
+                    class="w-3.5 h-3.5 cursor-pointer transition-colors" 
+                    :class="player.isFavorite(track) ? 'text-netease-red fill-current' : 'hover:text-netease-red'" 
+                  />
+                </button>
               </td>
               <td class="px-4 py-3 truncate max-w-xs">
                 <div class="flex items-center space-x-2">

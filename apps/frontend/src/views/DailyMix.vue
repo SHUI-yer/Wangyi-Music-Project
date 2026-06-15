@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import { usePlayerStore } from '../stores/player'
-import { Play, Zap, Clock, Calendar, Music } from 'lucide-vue-next'
+import { Play, Zap, Clock, Calendar, Music, Heart } from 'lucide-vue-next'
 
 const tracks = ref([])
 const player = usePlayerStore()
@@ -137,6 +137,13 @@ const formatDate = (date) => {
             </div>
             <div class="text-xs text-gray-400 truncate mt-0.5">{{ track.artist }}</div>
           </div>
+
+          <button @click.stop="player.toggleFavorite(track)" class="mx-3 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity">
+            <Heart 
+              class="w-4 h-4 cursor-pointer transition-colors" 
+              :class="player.isFavorite(track) ? 'text-netease-red fill-current' : 'text-gray-400 hover:text-netease-red'" 
+            />
+          </button>
 
           <div class="text-[10px] font-bold text-gray-300 group-hover:text-gray-400 transition-colors">
             {{ track.duration }}

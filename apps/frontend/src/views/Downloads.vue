@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Download, FolderSearch, Play, Trash2 } from 'lucide-vue-next'
+import { Download, FolderSearch, Play, Trash2, Heart } from 'lucide-vue-next'
 import { usePlayerStore } from '../stores/player'
 
 const player = usePlayerStore()
@@ -231,6 +231,12 @@ const playLocal = (track) => {
               <td class="px-6 py-4 text-sm text-gray-500">{{ track.album }}</td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-2">
+                  <button @click.stop="player.toggleFavorite(track)" class="focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Heart 
+                      class="w-4 h-4 cursor-pointer transition-colors" 
+                      :class="player.isFavorite(track) ? 'text-netease-red fill-current' : 'text-gray-400 hover:text-netease-red'" 
+                    />
+                  </button>
                   <button 
                     @click.stop="playLocal(track)"
                     class="w-8 h-8 rounded-full bg-red-50 text-netease-red flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
