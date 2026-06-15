@@ -64,7 +64,7 @@ export const usePlayerStore = defineStore('player', {
         this.recentTracks.splice(index, 1)
       }
       this.recentTracks.unshift(track)
-      if (this.recentTracks.length > 10) {
+      if (this.recentTracks.length > 20) {
         this.recentTracks.pop()
       }
     },
