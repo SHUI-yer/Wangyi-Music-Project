@@ -25,60 +25,55 @@ export const getRecommended = async () => {
 }
 
 export const getPlaylistDetail = async (id) => {
-  const numericId = parseInt(id)
-  let categoryName = `歌单 ${numericId}`
+  let categoryName = `歌单 ${id}`
   let scanParams = ''
 
   try {
     // Handle category IDs (201-204)
-    if (numericId === 201) { scanParams = 'category=chinese'; categoryName = '华语经典' }
-    else if (numericId === 202) { scanParams = 'category=pop'; categoryName = '流行前线' }
-    else if (numericId === 203) { scanParams = 'category=rock'; categoryName = '摇滚狂热' }
-    else if (numericId === 204) { scanParams = 'category=jazz'; categoryName = '爵士心情' }
+    if (id === 201) { scanParams = 'category=chinese'; categoryName = '华语经典' }
+    else if (id === 202) { scanParams = 'category=pop'; categoryName = '流行前线' }
+    else if (id === 203) { scanParams = 'category=rock'; categoryName = '摇滚狂热' }
+    else if (id === 204) { scanParams = 'category=jazz'; categoryName = '爵士心情' }
     else {
       // Normal playlists list1-list5
-      const playlistIndex = (numericId % 5) || 5
-      const playlistId = `list${playlistIndex}`
+      const playlistId = `list${(id % 5) || 5}`
       scanParams = `playlistId=${playlistId}`
       categoryName = `精品歌单 ${playlistId}`
     }
 
     const response = await fetch(`/api/scan-media?${scanParams}`)
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
     const localFiles = await response.json()
 
-    if (Array.isArray(localFiles) && localFiles.length > 0) {
+    if (localFiles && localFiles.length > 0) {
       const tracks = localFiles.map((file, i) => ({
-        id: numericId * 1000 + i,
+        id: id * 1000 + i,
         name: file.name,
         artist: file.artist,
         album: file.album,
         duration: file.duration,
-        cover: file.cover || `https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=music+album+cover+${numericId}+${i}&image_size=square`,
+        cover: file.cover || `https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=music+album+cover+${id}+${i}&image_size=square`,
         url: file.url
       }))
 
       return mockResponse({
-        id: numericId,
+        id,
         name: categoryName,
         cover: tracks[0].cover,
         description: `自动识别自 ${scanParams} 目录，共 ${tracks.length} 首歌`,
-        tracks,
-        playCount: 1500000 // Mock play count
+        tracks
       })
     }
   } catch (err) {
-    console.error('Failed to get playlist detail:', err)
+    console.warn('Failed to scan playlist directory.', err)
   }
 
   // If folder is empty, return empty tracks with correct categoryName
   return mockResponse({
-    id: numericId,
+    id,
     name: categoryName,
     cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=empty+playlist+cover&image_size=square',
-    description: `此歌单目录 (${scanParams}) 为空，请检查文件是否已放入正确目录。`,
-    tracks: [],
-    playCount: 0
+    description: `此歌单目录 (${scanParams}) 为空`,
+    tracks: []
   })
 }
 
