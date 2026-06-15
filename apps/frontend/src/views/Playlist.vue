@@ -94,9 +94,6 @@ const playAll = () => {
         </div>
       </div>
 
-<<<<<<< HEAD
-      <div class="border border-netease-border rounded-sm overflow-hidden mx-4">
-=======
       <!-- Empty State -->
       <div v-if="playlist.tracks.length === 0" class="flex flex-col items-center justify-center py-20 space-y-4">
         <div class="relative w-64 h-64 flex items-center justify-center">
@@ -149,7 +146,6 @@ const playAll = () => {
       </div>
 
       <div v-else class="border border-netease-border rounded-sm overflow-hidden mx-4">
->>>>>>> parent of 5ce97f4 (lcs)
         <table class="w-full text-xs text-left border-collapse">
           <thead>
             <tr class="bg-[#F8F8F8] border-b border-netease-border">
