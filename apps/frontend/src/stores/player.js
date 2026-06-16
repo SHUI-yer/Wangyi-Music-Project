@@ -5,7 +5,7 @@ const STORAGE_KEY = 'netease_player_state'
 export const usePlayerStore = defineStore('player', {
   state: () => {
     const savedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
-    
+
     return {
       currentTrack: savedState.currentTrack || null,
       queue: savedState.queue || [],
@@ -46,9 +46,9 @@ export const usePlayerStore = defineStore('player', {
       if (newQueue && newQueue.length > 0) {
         this.queue = [...newQueue]
       }
-      
+
       const index = this.queue.findIndex(t => t.id === track.id || t.url === track.url)
-      
+
       if (index !== -1) {
         this.currentIndex = index
       } else {
@@ -56,7 +56,7 @@ export const usePlayerStore = defineStore('player', {
         this.queue.unshift(track)
         this.currentIndex = 0
       }
-      
+
       this.currentTrack = this.queue[this.currentIndex]
       this.playbackTrigger++
       this.isPlaying = true
@@ -87,7 +87,7 @@ export const usePlayerStore = defineStore('player', {
 
     next() {
       if (this.queue.length === 0) return
-      
+
       if (this.playMode === 'random') {
         // Real random logic: pick an index other than the current one if queue > 1
         if (this.queue.length > 1) {
@@ -104,7 +104,7 @@ export const usePlayerStore = defineStore('player', {
         // Sequence/List loop: go to next, loop back to start if at end
         this.currentIndex = (this.currentIndex + 1) % this.queue.length
       }
-      
+
       this.playbackTrigger++
       this.currentTrack = this.queue[this.currentIndex]
       this.isPlaying = true
@@ -114,7 +114,7 @@ export const usePlayerStore = defineStore('player', {
 
     prev() {
       if (this.queue.length === 0) return
-      
+
       if (this.playMode === 'random') {
         this.currentIndex = Math.floor(Math.random() * this.queue.length)
       } else if (this.playMode === 'loop') {
@@ -122,7 +122,7 @@ export const usePlayerStore = defineStore('player', {
       } else {
         this.currentIndex = (this.currentIndex - 1 + this.queue.length) % this.queue.length
       }
-      
+
       this.playbackTrigger++
       this.currentTrack = this.queue[this.currentIndex]
       this.isPlaying = true
@@ -177,28 +177,71 @@ export const usePlayerStore = defineStore('player', {
       this.isFullscreen = !this.isFullscreen
     },
 
+    // --- Data Rehydration (Fix Missing Covers) ---
+    async rehydrateCurrentTrack() {
+      // 如果当前没有歌曲，或者已经有封面且不是占位图，则跳过
+      const isPlaceholder = this.currentTrack?.cover && this.currentTrack.cover.startsWith('data:image/svg+xml')
+      if (!this.currentTrack || (this.currentTrack.cover && !isPlaceholder)) return
+
+      try {
+        // 根据 URL 尝试从后端重新扫描获取元数据
+        let scanUrl = '/api/scan-media'
+        const trackUrl = this.currentTrack.url
+
+        if (trackUrl.includes('/playlists/')) {
+          const parts = trackUrl.split('/')
+          const playlistId = parts[parts.indexOf('playlists') + 1]
+          scanUrl = `/api/scan-media?playlistId=${playlistId}`
+        } else if (trackUrl.includes('/media/')) {
+          const parts = trackUrl.split('/')
+          const mediaIndex = parts.indexOf('media')
+          if (parts.length > mediaIndex + 2) {
+            const category = parts[mediaIndex + 1]
+            scanUrl = `/api/scan-media?category=${category}`
+          }
+        }
+
+        const response = await fetch(scanUrl)
+        const localFiles = await response.json()
+
+        // 匹配 URL 寻找完整的元数据（包含封面）
+        // 关键修复：使用 decodeURIComponent 确保中文路径匹配成功
+        const currentUrlDecoded = decodeURIComponent(this.currentTrack.url)
+        const fullData = localFiles.find(f => decodeURIComponent(f.url) === currentUrlDecoded)
+
+        if (fullData && fullData.cover) {
+          console.log('Successfully rehydrated track cover for:', this.currentTrack.name)
+          this.currentTrack.cover = fullData.cover
+          // 同时也更新队列中的数据
+          if (this.currentIndex !== -1 && this.queue[this.currentIndex]) {
+            this.queue[this.currentIndex].cover = fullData.cover
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to rehydrate track data:', err)
+      }
+    },
+
     saveState() {
-      // 优化持久化逻辑：
-      // 1. 允许保存封面数据（包括 Base64），因为最近播放和收藏夹需要它。
-      // 2. 只有播放队列 (queue) 这种可能包含数百首歌的列表才移除 Base64 封面，以防 localStorage 溢出。
+      // 持久化时移除巨大的 base64 封面数据，避免 localStorage 溢出（5MB 限制）
+      // 如果是正常的 URL 则保留，确保刷新后能显示封面
       const stripLargeCover = (track) => {
         if (!track) return track
-        // 如果封面是 Base64 且字符串很长（通常本地封面 > 10KB），在队列中移除它
-        if (track.cover && track.cover.startsWith('data:') && track.cover.length > 10000) {
-          const { cover, ...rest } = track
+        const { cover, ...rest } = track
+        // 如果是以 data: 开头的 base64 字符串且长度较大，则移除
+        if (cover && cover.startsWith('data:') && cover.length > 1024) {
           return rest
         }
         return track
       }
-
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        currentTrack: this.currentTrack, // 当前播放歌曲必须保留封面
-        queue: this.queue.map(stripLargeCover), // 队列进行瘦身
+        currentTrack: stripLargeCover(this.currentTrack),
+        queue: this.queue.map(stripLargeCover),
         currentIndex: this.currentIndex,
         volume: this.volume,
         playMode: this.playMode,
-        recentTracks: this.recentTracks, // 最近播放保留封面（仅 20 首，空间足够）
-        favorites: this.favorites // 收藏夹保留封面
+        recentTracks: this.recentTracks.map(stripLargeCover),
+        favorites: this.favorites.map(stripLargeCover)
       }))
     }
   }

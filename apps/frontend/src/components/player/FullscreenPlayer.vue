@@ -8,6 +8,8 @@ import { useAudio } from '../../composables/useAudio'
 const player = usePlayerStore()
 const { seek } = useAudio()
 
+const DEFAULT_COVER = 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=music+album+cover+placeholder&image_size=square'
+
 const playModeLabel = computed(() => {
   const labels = {
     sequence: '列表循环',
@@ -48,7 +50,11 @@ const onVolumeInput = (e) => {
     <div v-if="player.isFullscreen" class="fixed inset-0 z-[100] bg-[#121212] flex flex-col overflow-hidden text-white">
       <!-- Background Blur -->
       <div class="absolute inset-0 z-0">
-        <img :src="player.currentTrack?.cover" class="w-full h-full object-cover blur-[100px] opacity-20 scale-150">
+        <img 
+          :src="player.currentTrack?.cover || DEFAULT_COVER" 
+          @error="(e) => { if (!e.target.dataset.errorHandled) { e.target.dataset.errorHandled = 'true'; e.target.src = DEFAULT_COVER } }"
+          class="w-full h-full object-cover blur-[100px] opacity-20 scale-150"
+        >
         <div class="absolute inset-0 bg-black/40"></div>
       </div>
 
@@ -82,7 +88,11 @@ const onVolumeInput = (e) => {
             
             <!-- Album Cover Center -->
             <div class="w-[65%] h-[65%] rounded-full overflow-hidden border-[8px] border-black shadow-inner">
-              <img :src="player.currentTrack?.cover" class="w-full h-full object-cover">
+              <img 
+                :src="player.currentTrack?.cover || DEFAULT_COVER" 
+                @error="(e) => { if (!e.target.dataset.errorHandled) { e.target.dataset.errorHandled = 'true'; e.target.src = DEFAULT_COVER } }"
+                class="w-full h-full object-cover"
+              >
             </div>
           </div>
           
