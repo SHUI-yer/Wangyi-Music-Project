@@ -179,19 +179,24 @@ export const usePlayerStore = defineStore('player', {
 
     // --- Data Rehydration (Fix Missing Covers) ---
     async rehydrateCurrentTrack() {
-      if (!this.currentTrack || this.currentTrack.cover) return
+      // 如果当前没有歌曲，或者已经有封面且不是占位图，则跳过
+      const isPlaceholder = this.currentTrack?.cover && this.currentTrack.cover.startsWith('data:image/svg+xml')
+      if (!this.currentTrack || (this.currentTrack.cover && !isPlaceholder)) return
 
       try {
         // 根据 URL 尝试从后端重新扫描获取元数据
         let scanUrl = '/api/scan-media'
-        if (this.currentTrack.url.includes('/playlists/')) {
-          const parts = this.currentTrack.url.split('/')
+        const trackUrl = this.currentTrack.url
+
+        if (trackUrl.includes('/playlists/')) {
+          const parts = trackUrl.split('/')
           const playlistId = parts[parts.indexOf('playlists') + 1]
           scanUrl = `/api/scan-media?playlistId=${playlistId}`
-        } else if (this.currentTrack.url.includes('/media/')) {
-          const parts = this.currentTrack.url.split('/')
-          const category = parts[parts.indexOf('media') + 1]
-          if (category && category.length > 0) {
+        } else if (trackUrl.includes('/media/')) {
+          const parts = trackUrl.split('/')
+          const mediaIndex = parts.indexOf('media')
+          if (parts.length > mediaIndex + 2) {
+            const category = parts[mediaIndex + 1]
             scanUrl = `/api/scan-media?category=${category}`
           }
         }
@@ -200,12 +205,15 @@ export const usePlayerStore = defineStore('player', {
         const localFiles = await response.json()
 
         // 匹配 URL 寻找完整的元数据（包含封面）
-        const fullData = localFiles.find(f => f.url === this.currentTrack.url)
+        // 关键修复：使用 decodeURIComponent 确保中文路径匹配成功
+        const currentUrlDecoded = decodeURIComponent(this.currentTrack.url)
+        const fullData = localFiles.find(f => decodeURIComponent(f.url) === currentUrlDecoded)
+
         if (fullData && fullData.cover) {
           console.log('Successfully rehydrated track cover for:', this.currentTrack.name)
           this.currentTrack.cover = fullData.cover
           // 同时也更新队列中的数据
-          if (this.currentIndex !== -1) {
+          if (this.currentIndex !== -1 && this.queue[this.currentIndex]) {
             this.queue[this.currentIndex].cover = fullData.cover
           }
         }
