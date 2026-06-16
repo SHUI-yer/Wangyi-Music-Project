@@ -178,14 +178,20 @@ export const usePlayerStore = defineStore('player', {
     },
 
     saveState() {
+      // 持久化时移除封面 base64 数据，避免 localStorage 溢出（5MB 限制）
+      const stripCover = (track) => {
+        if (!track) return track
+        const { cover, ...rest } = track
+        return rest
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        currentTrack: this.currentTrack,
-        queue: this.queue,
+        currentTrack: stripCover(this.currentTrack),
+        queue: this.queue.map(stripCover),
         currentIndex: this.currentIndex,
         volume: this.volume,
         playMode: this.playMode,
-        recentTracks: this.recentTracks,
-        favorites: this.favorites
+        recentTracks: this.recentTracks.map(stripCover),
+        favorites: this.favorites.map(stripCover)
       }))
     }
   }
