@@ -52,22 +52,33 @@ function fixEncoding(val) {
 }
 
 /**
- * 从文件名解析歌手和歌名
- * 格式通常为: "歌手 - 歌名.mp3"
+ * 鲁棒的文件名解析：从文件名中提取歌手和歌名
+ * 支持格式: "歌手 - 歌名", "歌手--歌名", "歌名 - 歌手", "歌手_歌名"
  */
 function parseMusicFileName(fileName) {
   const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "")
-  if (nameWithoutExt.includes(' - ')) {
-    const parts = nameWithoutExt.split(' - ')
-    return {
-      artist: parts[0].trim(),
-      title: parts.slice(1).join(' - ').trim()
+  
+  // 优先级 1: 处理 " -- " 或 "--" (用户截图中出现的格式)
+  if (nameWithoutExt.includes('--')) {
+    const parts = nameWithoutExt.split('--')
+    if (parts.length >= 2) {
+      return { artist: parts[1].trim(), title: parts[0].trim() } // 适配 "歌名--歌手"
     }
   }
-  return {
-    artist: '未知歌手',
-    title: nameWithoutExt
+
+  // 优先级 2: 处理 " - "
+  if (nameWithoutExt.includes(' - ')) {
+    const parts = nameWithoutExt.split(' - ')
+    return { artist: parts[0].trim(), title: parts[1].trim() }
   }
+
+  // 优先级 3: 处理 "_" (如果不包含空格)
+  if (nameWithoutExt.includes('_') && !nameWithoutExt.includes(' ')) {
+    const parts = nameWithoutExt.split('_')
+    return { artist: parts[0].trim(), title: parts[1].trim() }
+  }
+
+  return { artist: '未知歌手', title: nameWithoutExt }
 }
 
 // 本地默认封面占位图 (SVG data URI，不依赖外部网络)
@@ -143,20 +154,25 @@ export default defineConfig({
                 cover = await compressCoverToDataURI(pic.data, pic.format)
               }
               
-              // 编码修复与兜底逻辑
-              let artist = fixEncoding(metadata.common.artist)
-              let album = fixEncoding(metadata.common.album)
+              // --- 核心修复：优先从文件名解析元数据以规避 ID3 乱码 ---
+              const fileNameInfo = parseMusicFileName(f)
               
-              // 如果 ID3 标签修复后仍然失效（返回 null），则从文件名中解析
-              if (!artist || artist === '未知歌手') {
-                const parsed = parseMusicFileName(f)
-                artist = parsed.artist
+              // 1. 歌手：优先用文件名解析出的歌手 (如果不是未知)
+              let artist = fileNameInfo.artist
+              if (artist === '未知歌手') {
+                artist = fixEncoding(metadata.common.artist) || '未知歌手'
               }
 
+              // 2. 歌名：优先用文件名解析出的歌名
+              let title = fileNameInfo.title || fileNameWithoutExt
+
+              // 3. 专辑：文件名通常不含专辑，仍从 ID3 读取并尝试修复编码
+              let album = fixEncoding(metadata.common.album) || '未知专辑'
+
               return {
-                name: fileNameWithoutExt,
-                artist: artist || '未知歌手',
-                album: album || '未知专辑',
+                name: title,
+                artist: artist,
+                album: album,
                 duration: metadata.format.duration ? 
                   `${Math.floor(metadata.format.duration / 60)}:${Math.floor(metadata.format.duration % 60).toString().padStart(2, '0')}` : 
                   '03:30',

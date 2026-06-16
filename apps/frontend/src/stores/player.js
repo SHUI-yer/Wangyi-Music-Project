@@ -178,20 +178,27 @@ export const usePlayerStore = defineStore('player', {
     },
 
     saveState() {
-      // 持久化时移除封面 base64 数据，避免 localStorage 溢出（5MB 限制）
-      const stripCover = (track) => {
+      // 优化持久化逻辑：
+      // 1. 允许保存封面数据（包括 Base64），因为最近播放和收藏夹需要它。
+      // 2. 只有播放队列 (queue) 这种可能包含数百首歌的列表才移除 Base64 封面，以防 localStorage 溢出。
+      const stripLargeCover = (track) => {
         if (!track) return track
-        const { cover, ...rest } = track
-        return rest
+        // 如果封面是 Base64 且字符串很长（通常本地封面 > 10KB），在队列中移除它
+        if (track.cover && track.cover.startsWith('data:') && track.cover.length > 10000) {
+          const { cover, ...rest } = track
+          return rest
+        }
+        return track
       }
+
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        currentTrack: stripCover(this.currentTrack),
-        queue: this.queue.map(stripCover),
+        currentTrack: this.currentTrack, // 当前播放歌曲必须保留封面
+        queue: this.queue.map(stripLargeCover), // 队列进行瘦身
         currentIndex: this.currentIndex,
         volume: this.volume,
         playMode: this.playMode,
-        recentTracks: this.recentTracks.map(stripCover),
-        favorites: this.favorites.map(stripCover)
+        recentTracks: this.recentTracks, // 最近播放保留封面（仅 20 首，空间足够）
+        favorites: this.favorites // 收藏夹保留封面
       }))
     }
   }
