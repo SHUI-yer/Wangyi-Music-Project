@@ -1,5 +1,5 @@
 <script setup>
-import { Heart, Play, Share2, Download, Clock } from 'lucide-vue-next'
+import { Heart, Play, Clock } from 'lucide-vue-next'
 import { usePlayerStore } from '../stores/player'
 
 const player = usePlayerStore()
@@ -46,15 +46,6 @@ const playAll = () => {
           >
             <Play class="w-5 h-5 fill-current" />
             <span>播放全部</span>
-          </button>
-          
-          <button class="flex items-center space-x-2 px-5 py-2.5 border border-gray-200 rounded-full hover:bg-gray-50 text-sm font-medium text-gray-700 shadow-sm transition-colors">
-            <Share2 class="w-4 h-4 text-gray-500" />
-            <span>分享</span>
-          </button>
-          <button class="flex items-center space-x-2 px-5 py-2.5 border border-gray-200 rounded-full hover:bg-gray-50 text-sm font-medium text-gray-700 shadow-sm transition-colors">
-            <Download class="w-4 h-4 text-gray-500" />
-            <span>下载</span>
           </button>
         </div>
       </div>
