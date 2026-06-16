@@ -9,32 +9,32 @@ export const PLAYLIST_CONFIG = {
   // --- 首页推荐歌单 (精品系列) ---
   101: {
     playlistId: 'list1',
-    name: '新歌好时光', // 原: 精品歌单 list1
-    description: '精选近期最值得聆听的新歌，在旋律中感受时光的流动。',
+    name: '摇滚|欢迎光临一个人的卧室solo', // 原: 精品歌单 list1
+    description: '一个人在家里の时候，可以无拘无束地随心跳舞，音响永远比耳机更适合，那么今天开始要跟我一起跳舞吗',
     cover: '/assets/playlists/list1.jpg'
   },
   102: {
     playlistId: 'list2',
-    name: '午后慵懒旋律', // 原: 精品歌单 list2
-    description: '适合在午后阳光下聆听的轻快节奏，让心情随音符一起起舞。',
+    name: 'emo尽头是释怀·单曲循环到天亮「华语流行」', // 原: 精品歌单 list2
+    description: '人生是一场单程の旅行，其实有些遗憾，我们也没有从头再来の机会，与其纠结无法改变の过去，不如微笑着，珍惜未来，为生活，没有如果',
     cover: '/assets/playlists/list2.jpg'
   },
   103: {
     playlistId: 'list3',
-    name: '深夜情感电台', // 原: 精品歌单 list3
-    description: '在这个安静的夜晚，让音乐治愈你的所有不开心。',
+    name: 'Alaina Castillo parallel universe pt.1', // 原: 精品歌单 list3
+    description: '未来感十足!丝滑的转音加上甜美但又有力量的声线，让人一秒入迷。Alaina Castillo以其独特的声音和深情的演绎而广受到赞誉。她的声线自然而富有感染力，能够轻松地在流行音乐领域中展现实力。',
     cover: '/assets/playlists/list3.jpg'
   },
   104: {
     playlistId: 'list4',
-    name: '经典怀旧金曲', // 原: 精品歌单 list4
-    description: '重温那些岁月的印记，每一首歌都是一段难忘的回忆。',
+    name: 'Troye Sivan 《Blue Neighbourhood (The Remixes)[Explicit]》', // 原: 精品歌单 list4
+    description: '《Blue Neighbourhood》是Troye Sivan于2015年12月4日发行的首张专辑。专辑制作人是Emile Haynie和Troye Sivan。2016年，专辑歌曲《Youth》获得美国青少年选择奖“最佳男歌手单曲奖”提名。  奖项荣誉 ds&HonorN    第12届Melon音乐奖Melon Masic Awards     最佳POP奖(提名)',
     cover: '/assets/playlists/list4.jpg'
   },
   105: {
     playlistId: 'list5',
-    name: '动感节奏时刻', // 原: 精品歌单 list5
-    description: '点燃你的运动激情，让强劲的鼓点带你突破极限。',
+    name: 'Austin MahoneStory (Explicit)', // 原: 精品歌单 list5Austin MahoneStory (Explicit)
+    description: '于2023年6月23日的乡村音乐，由Amper Music发行，它是一家位于美国纽约的人工智能音乐技术公司，成立于2014年。专辑“酝酿已久”。这张专辑标志着他脱离了最初以青少年流行音乐、舞曲流行音乐和R&B音乐而闻名的风格，转而采用更具乡村风格的声音。',
     cover: '/assets/playlists/list5.jpg'
   },
 

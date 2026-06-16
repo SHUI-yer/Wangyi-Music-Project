@@ -105,7 +105,11 @@ const clearHistory = () => {
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  <img :src="track.cover" class="w-10 h-10 rounded shadow-sm object-cover">
+                  <img 
+                    :src="track.cover || 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=music+placeholder&image_size=square'" 
+                    @error="(e) => e.target.src = 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=music+placeholder&image_size=square'"
+                    class="w-10 h-10 rounded shadow-sm object-cover"
+                  >
                   <span class="font-medium truncate max-w-[200px]" :class="player.currentTrack?.id === track.id ? 'text-netease-red' : 'text-gray-800'">
                     {{ track.name }}
                   </span>

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "npm run dev",
+    "predev": "node -e \"try { require('sharp') } catch (e) { console.log('Checking dependencies: sharp not found, installing...'); require('child_process').execSync('npm install sharp', {stdio: 'inherit'}) }\"",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
