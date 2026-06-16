@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { getPlaylistDetail, getRandomSongs } from './api/music'
 import { usePlayerStore } from './stores/player'
 import { useAudio } from './composables/useAudio'
 import SongInfo from './components/player/SongInfo.vue'
@@ -41,8 +42,36 @@ const handleGlobalKeydown = (e) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('keydown', handleGlobalKeydown)
+  
+  // 首次进入或刷新页面时
+  if (!player.currentTrack) {
+    // 1. 如果完全没歌，从 list1~5 随机选一个歌单
+    const randomPlaylistId = Math.floor(Math.random() * 5) + 1
+    try {
+      const res = await getPlaylistDetail(randomPlaylistId)
+      if (res.data && res.data.tracks.length > 0) {
+        const randomTrack = res.data.tracks[Math.floor(Math.random() * res.data.tracks.length)]
+        player.currentTrack = randomTrack
+        player.queue = res.data.tracks
+        player.currentIndex = res.data.tracks.indexOf(randomTrack)
+      } else {
+        // 如果随机歌单也空，尝试全局随机选一首
+        const globalSongs = await getRandomSongs(1)
+        if (globalSongs.length > 0) {
+          player.currentTrack = globalSongs[0]
+          player.queue = globalSongs
+          player.currentIndex = 0
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load initial random track', e)
+    }
+  } else if (!player.currentTrack.cover) {
+    // 2. 如果有歌但没封面（持久化剔除了 base64），尝试找回
+    player.rehydrateCurrentTrack()
+  }
 })
 
 onUnmounted(() => {

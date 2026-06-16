@@ -5,6 +5,8 @@ import { useRouter } from 'vue-router'
 
 const player = usePlayerStore()
 
+const DEFAULT_COVER = 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=music+album+cover+placeholder&image_size=square'
+
 const handleCoverClick = () => {
   if (player.currentTrack) {
     player.toggleFullscreen()
@@ -18,7 +20,12 @@ const handleCoverClick = () => {
       class="w-10 h-10 rounded-sm bg-gray-200 overflow-hidden shrink-0 border border-netease-border shadow-sm relative group cursor-pointer"
       @click="handleCoverClick"
     >
-      <img v-if="player.currentTrack" :src="player.currentTrack.cover" class="w-full h-full object-cover group-hover:brightness-75 transition-all">
+      <img 
+        v-if="player.currentTrack" 
+        :src="player.currentTrack.cover || DEFAULT_COVER" 
+        @error="(e) => { if (!e.target.dataset.errorHandled) { e.target.dataset.errorHandled = 'true'; e.target.src = DEFAULT_COVER } }"
+        class="w-full h-full object-cover group-hover:brightness-75 transition-all"
+      >
       <Music2 v-else class="w-full h-full p-2 text-gray-400" />
       <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="m15 3 6 6-6 6"/><path d="M9 21 3 15l6-6"/><path d="M21 9H9s-4 0-4 4 0 4 0 4"/></svg>
