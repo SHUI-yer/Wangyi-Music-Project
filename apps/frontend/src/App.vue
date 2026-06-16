@@ -57,10 +57,8 @@ onMounted(async () => {
         player.queue = res.data.tracks
         player.currentIndex = res.data.tracks.indexOf(randomTrack)
         
-        // 关键：如果随机到的歌曲封面是占位图，尝试立即找回真实封面
-        if (randomTrack.cover && randomTrack.cover.startsWith('data:image/svg+xml')) {
-          player.rehydrateCurrentTrack()
-        }
+        // 关键：主动补全整个队列的封面，这样点击下一首时封面也是好的
+        player.rehydrateQueue()
       } else {
         // 如果随机歌单也空，尝试全局随机选一首
         const globalSongs = await getRandomSongs(1)
