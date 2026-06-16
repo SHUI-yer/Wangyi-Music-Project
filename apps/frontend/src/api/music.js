@@ -1,5 +1,5 @@
 import { parseMusicFileName } from '../utils/musicParser'
-import { PLAYLIST_CONFIG, getFallbackPlaylistConfig } from '../config/playlistConfig'
+import { PLAYLIST_CONFIG, getPlaylistConfigById } from '../config/playlistConfig'
 
 const mockResponse = (data) => ({
   code: 0,
@@ -16,13 +16,18 @@ export const getBanners = async () => {
 }
 
 export const getRecommended = async () => {
-  return mockResponse([
-    { id: 101, name: getFallbackPlaylistConfig(101).name, cover: getFallbackPlaylistConfig(101).cover, playCount: 1250000 },
-    { id: 102, name: getFallbackPlaylistConfig(102).name, cover: getFallbackPlaylistConfig(102).cover, playCount: 850000 },
-    { id: 103, name: getFallbackPlaylistConfig(103).name, cover: getFallbackPlaylistConfig(103).cover, playCount: 2350000 },
-    { id: 104, name: getFallbackPlaylistConfig(104).name, cover: getFallbackPlaylistConfig(104).cover, playCount: 750000 },
-    { id: 105, name: getFallbackPlaylistConfig(105).name, cover: getFallbackPlaylistConfig(105).cover, playCount: 1550000 },
-  ])
+  // 直接从 PLAYLIST_CONFIG 中提取 101-105 的推荐配置
+  const recommendedIds = [101, 102, 103, 104, 105]
+  const data = recommendedIds.map(id => {
+    const config = getPlaylistConfigById(id)
+    return {
+      id,
+      name: config.name,
+      cover: config.cover,
+      playCount: Math.floor(Math.random() * 2000000) + 500000
+    }
+  })
+  return mockResponse(data)
 }
 
 export const getPlaylistDetail = async (id) => {
@@ -33,21 +38,19 @@ export const getPlaylistDetail = async (id) => {
 
   try {
     // 1. 读取外部配置文件 (Configuration-driven)
-    const config = PLAYLIST_CONFIG[id]
+    const config = getPlaylistConfigById(id)
 
-    if (config) {
-      // 命中已知分类
+    categoryName = config.name
+    description = config.description
+    cover = config.cover
+
+    if (config.category) {
       scanParams = `category=${config.category}`
-      categoryName = config.name
-      description = config.description
-      cover = config.cover
+    } else if (config.playlistId) {
+      scanParams = `playlistId=${config.playlistId}`
     } else {
-      // 未命中，使用兜底配置 (精品歌单 list1-list5)
-      const fallbackConfig = getFallbackPlaylistConfig(id)
-      scanParams = `playlistId=${fallbackConfig.playlistId}`
-      categoryName = fallbackConfig.name
-      description = fallbackConfig.description
-      cover = fallbackConfig.cover
+      // 兜底逻辑
+      scanParams = `playlistId=list1`
     }
 
     const response = await fetch(`/api/scan-media?${scanParams}`)
