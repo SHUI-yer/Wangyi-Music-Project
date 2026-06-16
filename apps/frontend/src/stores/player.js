@@ -5,11 +5,21 @@ const STORAGE_KEY = 'netease_player_state'
 export const usePlayerStore = defineStore('player', {
   state: () => {
     const savedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    const queue = savedState.queue || []
+    const currentIndex = savedState.currentIndex ?? -1
+    let currentTrack = savedState.currentTrack || null
+
+    // 关键修复：确保 currentTrack 和 queue[currentIndex] 引用同一个对象，避免更新不同步
+    if (currentIndex !== -1 && queue[currentIndex] && currentTrack) {
+      if (queue[currentIndex].url === currentTrack.url) {
+        currentTrack = queue[currentIndex]
+      }
+    }
 
     return {
-      currentTrack: savedState.currentTrack || null,
-      queue: savedState.queue || [],
-      currentIndex: savedState.currentIndex || -1,
+      currentTrack,
+      queue,
+      currentIndex,
       isPlaying: false,
       currentTime: 0,
       duration: 0,
@@ -62,6 +72,10 @@ export const usePlayerStore = defineStore('player', {
       this.isPlaying = true
       this.addToRecent(this.currentTrack)
       this.saveState()
+
+      // 关键：立即找回当前歌曲封面，并启动全队列异步补全
+      this.rehydrateCurrentTrack()
+      this.rehydrateQueue()
     },
 
     addToRecent(track) {
@@ -110,6 +124,9 @@ export const usePlayerStore = defineStore('player', {
       this.isPlaying = true
       this.addToRecent(this.currentTrack)
       this.saveState()
+
+      // 关键修复：切歌后立即检查并找回当前封面
+      this.rehydrateCurrentTrack()
     },
 
     prev() {
@@ -128,6 +145,9 @@ export const usePlayerStore = defineStore('player', {
       this.isPlaying = true
       this.addToRecent(this.currentTrack)
       this.saveState()
+
+      // 关键修复：切歌后立即检查并找回当前封面
+      this.rehydrateCurrentTrack()
     },
 
     updateProgress(time) {
@@ -179,9 +199,13 @@ export const usePlayerStore = defineStore('player', {
 
     // --- Data Rehydration (Fix Missing Covers) ---
     async rehydrateCurrentTrack() {
-      // 如果当前没有歌曲，或者已经有封面且不是占位图，则跳过
-      const isPlaceholder = this.currentTrack?.cover && this.currentTrack.cover.startsWith('data:image/svg+xml')
-      if (!this.currentTrack || (this.currentTrack.cover && !isPlaceholder)) return
+      // 识别是否为占位图 (SVG 占位符或 Trae AI 生成的模拟图)
+      const isPlaceholder = (url) => {
+        if (!url) return true
+        return url.startsWith('data:image/svg+xml') || url.includes('trae.ai/api/ide/v1/text_to_image')
+      }
+
+      if (!this.currentTrack || !isPlaceholder(this.currentTrack.cover)) return
 
       try {
         // 根据 URL 尝试从后端重新扫描获取元数据
@@ -205,7 +229,6 @@ export const usePlayerStore = defineStore('player', {
         const localFiles = await response.json()
 
         // 匹配 URL 寻找完整的元数据（包含封面）
-        // 关键修复：使用 decodeURIComponent 确保中文路径匹配成功
         const currentUrlDecoded = decodeURIComponent(this.currentTrack.url)
         const fullData = localFiles.find(f => decodeURIComponent(f.url) === currentUrlDecoded)
 
@@ -219,6 +242,62 @@ export const usePlayerStore = defineStore('player', {
         }
       } catch (err) {
         console.warn('Failed to rehydrate track data:', err)
+      }
+    },
+
+    // 补全整个播放队列的封面
+    async rehydrateQueue() {
+      if (this.queue.length === 0) return
+
+      const isPlaceholder = (url) => {
+        if (!url) return true
+        return url.startsWith('data:image/svg+xml') || url.includes('trae.ai/api/ide/v1/text_to_image')
+      }
+
+      const tracksToFix = this.queue.filter(t => isPlaceholder(t.cover))
+      if (tracksToFix.length === 0) return
+
+      console.log(`Proactively rehydrating ${tracksToFix.length} tracks in queue...`)
+
+      // 按文件夹分组，减少 API 调用次数
+      const groups = {}
+      tracksToFix.forEach(t => {
+        let scanUrl = '/api/scan-media'
+        if (t.url.includes('/playlists/')) {
+          const parts = t.url.split('/')
+          const playlistId = parts[parts.indexOf('playlists') + 1]
+          scanUrl = `/api/scan-media?playlistId=${playlistId}`
+        } else if (t.url.includes('/media/')) {
+          const parts = t.url.split('/')
+          const mediaIndex = parts.indexOf('media')
+          if (parts.length > mediaIndex + 2) {
+            const category = parts[mediaIndex + 1]
+            scanUrl = `/api/scan-media?category=${category}`
+          }
+        }
+        if (!groups[scanUrl]) groups[scanUrl] = []
+        groups[scanUrl].push(t)
+      })
+
+      for (const scanUrl in groups) {
+        try {
+          const response = await fetch(scanUrl)
+          const localFiles = await response.json()
+
+          groups[scanUrl].forEach(track => {
+            const decodedUrl = decodeURIComponent(track.url)
+            const fullData = localFiles.find(f => decodeURIComponent(f.url) === decodedUrl)
+            if (fullData && fullData.cover) {
+              track.cover = fullData.cover
+              // 额外的安全检查：如果这个 track 就是当前播放的歌曲，确保 currentTrack 也更新
+              if (this.currentTrack && (this.currentTrack.id === track.id || this.currentTrack.url === track.url)) {
+                this.currentTrack.cover = fullData.cover
+              }
+            }
+          })
+        } catch (e) {
+          console.warn('Batch rehydration failed for:', scanUrl)
+        }
       }
     },
 
