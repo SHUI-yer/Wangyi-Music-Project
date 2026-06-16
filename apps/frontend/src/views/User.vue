@@ -39,7 +39,7 @@ const handleFileSelect = async (event) => {
   isScanning.value = true
   uploadProgress.value = 0
   
-  // Optimization: Serial upload instead of Parallel to avoid memory crash
+  // Optimization: Serial upload with delay instead of Parallel to avoid memory crash
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
     const formData = new FormData()
@@ -50,6 +50,10 @@ const handleFileSelect = async (event) => {
         method: 'POST',
         body: formData
       })
+      
+      // 关键修复：每次上传完成后增加一个确认延迟，等待服务器磁盘 IO 完成
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
       uploadProgress.value = Math.round(((i + 1) / files.length) * 100)
     } catch (err) {
       console.error('Upload failed:', file.name, err)

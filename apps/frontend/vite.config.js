@@ -142,98 +142,129 @@ export default defineConfig({
 
           const fileNames = fs.readdirSync(scanPath).filter(f => /\.(mp3|wav|ogg|flac)$/i.test(f))
 
-          const files = await Promise.all(fileNames.map(async f => {
-            const filePath = path.resolve(scanPath, f)
-            const fileNameWithoutExt = f.replace(/\.[^/.]+$/, "")
+          // Concurrency Control: Process 3 files at a time to avoid memory crash
+          const results = []
+          const batchSize = 3
+          for (let i = 0; i < fileNames.length; i += batchSize) {
+            const batch = fileNames.slice(i, i + batchSize)
+            const batchResults = await Promise.all(batch.map(async f => {
+              const filePath = path.resolve(scanPath, f)
+              const fileNameWithoutExt = f.replace(/\.[^/.]+$/, "")
 
-            try {
-              const metadata = await mm.parseFile(filePath)
-              let cover = null
-              if (metadata.common.picture && metadata.common.picture.length > 0) {
-                const pic = metadata.common.picture[0]
-                cover = await compressCoverToDataURI(pic.data, pic.format)
-              }
-              
-              // --- 核心修复：优先从文件名解析元数据以规避 ID3 乱码 ---
-              const fileNameInfo = parseMusicFileName(f)
-              
-              // 1. 歌手：优先用文件名解析出的歌手 (如果不是未知)
-              let artist = fileNameInfo.artist
-              if (artist === '未知歌手') {
-                artist = fixEncoding(metadata.common.artist) || '未知歌手'
-              }
+              try {
+                const metadata = await mm.parseFile(filePath)
+                let cover = null
+                if (metadata.common.picture && metadata.common.picture.length > 0) {
+                  const pic = metadata.common.picture[0]
+                  cover = await compressCoverToDataURI(pic.data, pic.format)
+                }
+                
+                // --- 核心修复：优先从文件名解析元数据以规避 ID3 乱码 ---
+                const fileNameInfo = parseMusicFileName(f)
+                
+                // 1. 歌手：优先用文件名解析出的歌手 (如果不是未知)
+                let artist = fileNameInfo.artist
+                if (artist === '未知歌手') {
+                  artist = fixEncoding(metadata.common.artist) || '未知歌手'
+                }
 
-              // 2. 歌名：优先用文件名解析出的歌名
-              let title = fileNameInfo.title || fileNameWithoutExt
+                // 2. 歌名：优先用文件名解析出的歌名
+                let title = fileNameInfo.title || fileNameWithoutExt
 
-              // 3. 专辑：文件名通常不含专辑，仍从 ID3 读取并尝试修复编码
-              let album = fixEncoding(metadata.common.album) || '未知专辑'
+                // 3. 专辑：文件名通常不含专辑，仍从 ID3 读取并尝试修复编码
+                let album = fixEncoding(metadata.common.album) || '未知专辑'
 
-              return {
-                name: title,
-                artist: artist,
-                album: album,
-                duration: metadata.format.duration ? 
-                  `${Math.floor(metadata.format.duration / 60)}:${Math.floor(metadata.format.duration % 60).toString().padStart(2, '0')}` : 
-                  '03:30',
-                cover: cover || DEFAULT_COVER,
-                url: `${baseUrl}/${f}`,
-                fileName: f
+                return {
+                  name: title,
+                  artist: artist,
+                  album: album,
+                  duration: metadata.format.duration ? 
+                    `${Math.floor(metadata.format.duration / 60)}:${Math.floor(metadata.format.duration % 60).toString().padStart(2, '0')}` : 
+                    '03:30',
+                  cover: cover || DEFAULT_COVER,
+                  url: `${baseUrl}/${f}`,
+                  fileName: f
+                }
+              } catch (err) {
+                return {
+                  name: fileNameWithoutExt,
+                  artist: '未知歌手',
+                  album: '未知专辑',
+                  cover: DEFAULT_COVER,
+                  url: `${baseUrl}/${f}`,
+                  fileName: f
+                }
               }
-            } catch (err) {
-              return {
-                name: fileNameWithoutExt,
-                artist: '未知歌手',
-                album: '未知专辑',
-                cover: DEFAULT_COVER,
-                url: `${baseUrl}/${f}`,
-                fileName: f
-              }
-            }
-          }))
+            }))
+            results.push(...batchResults)
+          }
 
           res.setHeader('Content-Type', 'application/json; charset=utf-8')
-          res.end(JSON.stringify(files))
+          res.end(JSON.stringify(results))
         })
 
         // --- 2. Upload Local Music ---
         server.middlewares.use('/api/upload', (req, res) => {
           if (req.method !== 'POST') return res.end('Only POST allowed')
 
-          const busboy = Busboy({
-            headers: req.headers,
-            defParamCharset: 'utf8' // Ensure UTF-8 for form fields
-          })
-          const uploadDir = path.resolve(__dirname, 'public/media/local')
+          try {
+            const busboy = Busboy({
+              headers: req.headers,
+              defParamCharset: 'utf8',
+              limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+            })
+            const uploadDir = path.resolve(__dirname, 'public/media/local')
 
-          if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
+            if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
 
-          busboy.on('file', (name, file, info) => {
-            let { filename } = info
+            busboy.on('file', (name, file, info) => {
+              let { filename } = info
 
-            // Fix: If filename is wrongly interpreted as Latin1, convert back to UTF-8
-            try {
-              const buffer = Buffer.from(filename, 'latin1')
-              const decoded = buffer.toString('utf8')
-              // Check if it looks like valid UTF-8 (common heuristic)
-              if (decoded !== filename && !decoded.includes('�')) {
-                filename = decoded
-              }
-            } catch (e) {
-              // Fallback to original
-            }
+              try {
+                const buffer = Buffer.from(filename, 'latin1')
+                const decoded = buffer.toString('utf8')
+                if (decoded !== filename && !decoded.includes('�')) {
+                  filename = decoded
+                }
+              } catch (e) {}
 
-            const saveTo = path.join(uploadDir, filename)
-            console.log(`[Uploader] Saving: ${filename}`)
-            file.pipe(fs.createWriteStream(saveTo))
-          })
+              const saveTo = path.join(uploadDir, filename)
+              const writeStream = fs.createWriteStream(saveTo)
+              
+              file.on('error', (err) => {
+                console.error('[Uploader] File stream error:', err)
+                writeStream.destroy()
+              })
 
-          busboy.on('finish', () => {
-            res.setHeader('Content-Type', 'application/json; charset=utf-8')
-            res.end(JSON.stringify({ success: true, message: 'Upload finished' }))
-          })
+              writeStream.on('error', (err) => {
+                console.error('[Uploader] Write stream error:', err)
+                file.resume()
+              })
 
-          req.pipe(busboy)
+              file.pipe(writeStream)
+
+              // 关键修复：确保只有当文件真正写入完成后才继续处理下一个
+              writeStream.on('finish', () => {
+                console.log(`[Uploader] Saved: ${filename}`)
+              })
+            })
+
+            busboy.on('finish', () => {
+              // 给磁盘写入留出最后的缓冲时间，确保所有流都已关闭
+              setTimeout(() => {
+                if (!res.writableEnded) {
+                  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+                  res.end(JSON.stringify({ success: true, message: 'Upload finished' }))
+                }
+              }, 200)
+            })
+
+            req.pipe(busboy)
+          } catch (err) {
+            console.error('[Uploader] Setup error:', err)
+            res.statusCode = 500
+            res.end(JSON.stringify({ success: false, error: err.message }))
+          }
         })
 
         // --- 3. Delete Local Music ---
