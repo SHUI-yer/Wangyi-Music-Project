@@ -137,19 +137,6 @@ export const getRandomSongs = async (count = 6) => {
   }
 }
 
-export const searchMusic = async (keyword) => {
-  const results = Array.from({ length: 10 }, (_, i) => ({
-    id: 2000 + i,
-    name: `${keyword} Result ${i + 1}`,
-    artist: `Artist ${i + 1}`,
-    album: `Search Album ${i + 1}`,
-    duration: '03:45',
-    cover: `https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=search+result+${i}&image_size=square`,
-    url: '/media/song.mp3'
-  }))
-  return mockResponse(results)
-}
-
 export const getTopLists = async () => {
   return mockResponse([
     { id: 1, name: '飙升榜', updateFrequency: '每天更新', cover: 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=soaring+chart&image_size=square' },

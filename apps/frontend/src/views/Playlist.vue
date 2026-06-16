@@ -40,9 +40,11 @@ const playAll = () => {
             <h2 class="text-2xl font-bold">{{ playlist.name }}</h2>
           </div>
           
-          <div class="flex items-center space-x-3 text-xs">
-            <div class="w-8 h-8 rounded bg-gray-200"></div>
-            <span class="text-blue-600 cursor-pointer hover:underline">网易云音乐</span>
+          <div class="flex items-center space-x-3 text-sm">
+            <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-netease-border shadow-sm">
+              <img src="/assets/user/avatar.jpg" @error="(e) => { if (!e.target.dataset.errorHandled) { e.target.dataset.errorHandled = 'true'; e.target.src = 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=simple+user+avatar+gray&image_size=square' } }" class="w-full h-full object-cover">
+            </div>
+            <span class="text-blue-600 cursor-pointer hover:underline font-medium">网抑云深夜emo</span>
             <span class="text-netease-subtext">2024-06-13 创建</span>
           </div>
         </div>

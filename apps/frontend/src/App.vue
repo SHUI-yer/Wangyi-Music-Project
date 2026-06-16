@@ -69,7 +69,6 @@ onUnmounted(() => {
               type="text" 
               placeholder="搜索音乐, 视频, 歌词, 电台" 
               class="bg-black/15 border-none rounded-full py-1.5 pl-9 pr-4 text-xs w-64 text-white placeholder:text-white/40 outline-none focus:bg-white/10 transition-all"
-              @keyup.enter="router.push('/search')"
             >
           </div>
         </div>

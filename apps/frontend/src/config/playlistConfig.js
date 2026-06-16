@@ -11,14 +11,14 @@ export const PLAYLIST_CONFIG = {
     category: 'chinese',
     name: '华语经典',
     description: '精选华语流行金曲，带你重温那些年我们一起追过的声音。从老情歌到新潮流，每一首都值得单曲循环。',
-    cover: '/assets/categories/chinese.jpg'
+    cover: '/assets/categories/chinese.png'
   },
   // 流行前线
   202: {
     category: 'pop',
     name: '流行前线',
     description: '汇集全球最新最热的流行榜单曲目。紧跟潮流节拍，感受当下的音乐脉搏。',
-    cover: '/assets/categories/pop.jpg'
+    cover: '/assets/categories/pop.png'
   },
   // 摇滚狂热
   203: {
