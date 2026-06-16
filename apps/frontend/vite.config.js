@@ -11,42 +11,63 @@ import sharp from 'sharp'
 function fixEncoding(val) {
   if (!val) return null
 
-  // If it's an array (common in music-metadata), take the first one or join
-  let str = Array.isArray(val) ? val.join(', ') : String(val)
-
+  // If it's an array, take the first one
+  let str = Array.isArray(val) ? val[0] : String(val)
   if (!str || typeof str !== 'string') return str
 
-  // Heuristic: If it's pure ASCII, it's fine
-  if (/^[\x00-\x7F]*$/.test(str)) return str
-
+  // 1. 如果包含常见的乱码特征（如 '鉃' 或大量 '�'），尝试修复
+  const hasGarbage = /[\u9243\ufffd]/.test(str)
+  
   try {
-    // 1. Check if it's already valid UTF-8
     const bufRaw = Buffer.from(str, 'binary')
+    
+    // 尝试识别编码
     const detected = jschardet.detect(bufRaw)
-
-    // 2. If it's likely Latin1 but should be UTF-8 or GBK
-    if (detected.encoding === 'ISO-8859-1' || detected.encoding === 'windows-1252') {
-      const utf8Buf = Buffer.from(str, 'latin1')
-
-      // Try UTF-8 first
-      const utf8Str = utf8Buf.toString('utf8')
-      if (!utf8Str.includes('�') && /[\u4e00-\u9fa5]/.test(utf8Str)) return utf8Str
-
-      // Then try GBK
-      const gbkStr = iconv.decode(utf8Buf, 'gbk')
-      if (!gbkStr.includes('�') && /[\u4e00-\u9fa5]/.test(gbkStr)) return gbkStr
+    
+    // 2. 针对 Windows 下常见的 GBK (ID3v1/v2 常见问题)
+    if (detected.encoding === 'windows-1252' || detected.encoding === 'ISO-8859-1' || hasGarbage) {
+      // 尝试用 GBK 解码
+      const gbkStr = iconv.decode(bufRaw, 'gbk')
+      // 如果解码后包含中文且没有乱码，则使用
+      if (/[\u4e00-\u9fa5]/.test(gbkStr) && !gbkStr.includes('�')) {
+        return gbkStr
+      }
+      
+      // 尝试用 UTF-8 解码
+      const utf8Str = bufRaw.toString('utf8')
+      if (/[\u4e00-\u9fa5]/.test(utf8Str) && !utf8Str.includes('�')) {
+        return utf8Str
+      }
     }
-
-    // 3. Try forced GBK if it's not valid UTF-8
-    const gbkBuf = Buffer.from(str, 'binary')
-    const gbkFixed = iconv.decode(gbkBuf, 'gbk')
-    if (!gbkFixed.includes('�') && /[\u4e00-\u9fa5]/.test(gbkFixed)) return gbkFixed
-
   } catch (e) {
-    // Silent fail
+    // 忽略错误
+  }
+
+  // 3. 最后检查：如果字符串中还是包含乱码，返回 null 让前端走文件名解析兜底
+  if (str.includes('�') || /[\u9243]/.test(str)) {
+    return null
   }
 
   return str
+}
+
+/**
+ * 从文件名解析歌手和歌名
+ * 格式通常为: "歌手 - 歌名.mp3"
+ */
+function parseMusicFileName(fileName) {
+  const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "")
+  if (nameWithoutExt.includes(' - ')) {
+    const parts = nameWithoutExt.split(' - ')
+    return {
+      artist: parts[0].trim(),
+      title: parts.slice(1).join(' - ').trim()
+    }
+  }
+  return {
+    artist: '未知歌手',
+    title: nameWithoutExt
+  }
 }
 
 // 本地默认封面占位图 (SVG data URI，不依赖外部网络)
@@ -122,15 +143,20 @@ export default defineConfig({
                 cover = await compressCoverToDataURI(pic.data, pic.format)
               }
               
-              // Logic Requirement: 
-              // 1. Title (name) always from FileName
-              // 2. Artist & Album from ID3 with encoding fix
-              // 3. Cover from ID3 if exists (compressed to JPEG)
+              // 编码修复与兜底逻辑
+              let artist = fixEncoding(metadata.common.artist)
+              let album = fixEncoding(metadata.common.album)
               
+              // 如果 ID3 标签修复后仍然失效（返回 null），则从文件名中解析
+              if (!artist || artist === '未知歌手') {
+                const parsed = parseMusicFileName(f)
+                artist = parsed.artist
+              }
+
               return {
                 name: fileNameWithoutExt,
-                artist: fixEncoding(metadata.common.artist) || '未知歌手',
-                album: fixEncoding(metadata.common.album) || '未知专辑',
+                artist: artist || '未知歌手',
+                album: album || '未知专辑',
                 duration: metadata.format.duration ? 
                   `${Math.floor(metadata.format.duration / 60)}:${Math.floor(metadata.format.duration % 60).toString().padStart(2, '0')}` : 
                   '03:30',
