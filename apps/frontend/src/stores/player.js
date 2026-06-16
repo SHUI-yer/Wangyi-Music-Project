@@ -91,10 +91,10 @@ export const usePlayerStore = defineStore('player', {
 
     addToRecent(track) {
       if (!track) return
-      const index = this.recentTracks.findIndex(t => t.id === track.id)
-      if (index !== -1) {
-        this.recentTracks.splice(index, 1)
-      }
+      // 如果已在列表中，保持原位不动，避免顺序变化
+      const exists = this.recentTracks.some(t => t.id === track.id || t.url === track.url)
+      if (exists) return
+      // 只有新歌才添加到列表顶部
       this.recentTracks.unshift(track)
       if (this.recentTracks.length > 20) {
         this.recentTracks.pop()
