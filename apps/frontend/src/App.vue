@@ -185,6 +185,16 @@ onUnmounted(() => {
 
     <!-- Fullscreen Player Overlay -->
     <FullscreenPlayer />
+
+    <!-- Global Toast -->
+    <Transition name="toast">
+      <div
+        v-if="player.toastVisible"
+        class="fixed top-20 left-1/2 -translate-x-1/2 z-[200] px-5 py-2 rounded-full bg-black/75 text-white text-sm shadow-lg backdrop-blur-sm pointer-events-none"
+      >
+        {{ player.toastMessage }}
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -201,5 +211,21 @@ onUnmounted(() => {
 .slide-enter-from, .slide-leave-to {
   transform: translateY(20px);
   opacity: 0;
+}
+
+/* Toast Transitions */
+.toast-enter-active {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toast-leave-active {
+  transition: all 0.2s ease;
+}
+.toast-enter-from {
+  opacity: 0;
+  transform: translate(-50%, -12px);
+}
+.toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -8px);
 }
 </style>
